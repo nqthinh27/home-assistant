@@ -4,9 +4,11 @@ import UIScreen from "./UIScreen";
 import Smart from "../screens/Smart";
 import Setting from "../screens/Setting";
 import Home from "../screens/Home";
+import Login from "../screens/Login";
+import DeviceDetail from "../screens/DeviceDetail";
 
 const Stack = createNativeStackNavigator();
-export default function Navigator(): React.JSX.Element {
+export default function Navigator() {
     // const isDarkTheme = useSelector((state) => state.theme.isDarkTheme);
     return (
         <NavigationContainer>
@@ -14,7 +16,9 @@ export default function Navigator(): React.JSX.Element {
                 <Stack.Screen name={"Home"} component={Home} />
                 <Stack.Screen name={"UIScreen"} component={UIScreen} />
                 <Stack.Screen name={"Smart"} component={Smart} />
+                <Stack.Screen name={"Login"} component={Login} />
                 <Stack.Screen name={"Setting"} component={Setting} />
+                <Stack.Screen name={"DeviceDetail"} component={DeviceDetail} />
             </Stack.Navigator>
         </NavigationContainer>
     )

@@ -9,12 +9,12 @@ import {
     ScrollView,
     Dimensions,
 } from "react-native";
-import GlobalStyles from "../components/GlobalStyles";
+import { styles } from "../components/GlobalStyles";
 import colors from "../constants/colors";
 
-export default function Smart(): React.JSX.Element {
+export default function Smart() {
     return (
-        <SafeAreaView style={[GlobalStyles.customSafeArea, { backgroundColor: colors.white}]}>
+        <SafeAreaView style={[styles.customSafeArea, { backgroundColor: colors.white}]}>
             <Text>Smart screen</Text>
         </SafeAreaView>
     );

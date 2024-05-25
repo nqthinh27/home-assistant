@@ -11,17 +11,12 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import Entypo from '@expo/vector-icons/Entypo';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
-interface ScreenOptionsProps {
-    route: RouteProp<Record<string, object | undefined>, string>;
-    navigation: any;
-}
-
 const Tab = createBottomTabNavigator();
-const screenOptions = ({ route }: ScreenOptionsProps) => ({
+const screenOptions = ({ route }) => ({
     headerShown: false,
     tabBarActiveTintColor: colors.primary,
     tabBarInactiveTintColor: colors.inactive,
-    tabBarIcon: ({ focused, color, size }: { focused: boolean, color: string, size: number }) => {
+    tabBarIcon: ({ focused, color, size }) => {
         let iconName;
 
         if (route.name === 'Home') {
