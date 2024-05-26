@@ -6,13 +6,13 @@ export const styles = StyleSheet.create({
     customSafeArea: {
         flex: 1,
         paddingTop: Platform.OS === 'android' ? 45 : 0,
-        marginHorizontal: 16,
+        // marginHorizontal: 16,
         flexDirection: 'column'
     },
     container: {
+        flexDirection: "column",
         marginHorizontal: 16,
-        flexDirection: "row",
-        backgroundColor: colors.white,
+        flex: 1
     },
     goback: {
         flexDirection: "row",
