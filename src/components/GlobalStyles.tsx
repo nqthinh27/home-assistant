@@ -18,12 +18,11 @@ export const styles = StyleSheet.create({
         flexDirection: "row",
         alignItems: "center",
         width: 150,
-        marginBottom: 8
         // backgroundColor: colors.gray_bg,F
     },
     gobackText: {
-        fontSize: 16,
-        fontWeight: '500'
+        fontSize: 22,
+        fontWeight: '600'
     },
     h1: {
         fontSize: 20,

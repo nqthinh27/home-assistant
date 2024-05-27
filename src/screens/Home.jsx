@@ -36,11 +36,11 @@ export default function Home() {
                 if (user !== null) {
                     var parsedUser = JSON.parse(user);
                     setCurrentUser(JSON.parse(user));
+                    const allDevices = await getData('/api/states', parsedUser.token)
+                    setDevices(allDevices);
                 } else {
                     replace('Login');
                 }
-                const allDevices = await getData('/api/states', parsedUser.token)
-                setDevices(allDevices);
             } catch (error) {
                 console.error('Failed to load current user:', error);
             } finally {
