@@ -20,7 +20,7 @@ import { useNavigation } from "@react-navigation/native";
 import RNPickerSelect from 'react-native-picker-select';
 import { Picker } from '@react-native-picker/picker';
 import { device } from "../../utils/device";
-import { oneHundredElement, switchKey, userKey } from "../constants/common";
+import { oneHundredElement, scenarioKey, switchKey, userKey } from "../constants/common";
 import { switchColor } from "../constants/switchColor";
 import useStore from "../../utils/store";
 import { getData, postData } from "../../utils/commonRequest";
@@ -42,6 +42,13 @@ export default function DeviceDetail(props) {
         const result = await postData(`/api/services/select/select_option`, { entity_id: switchKey.get('powerOnBehavior'), option: value.toLowerCase() }, nowUser.token);
         setPowerOnBehavior(value);
         setModalPowerOnBehavior(false);
+        if (recordScenario) {
+            setScenario([...scenario, {
+                url: `/api/services/select/select_option`,
+                body: { entity_id: switchKey.get('powerOnBehavior'), option: value.toLowerCase() },
+                accessToken: nowUser.token
+            }])
+        }
     };
     const [powerOnBehavior1, setPowerOnBehavior1] = useState('On');
     const [modalPowerOnBehavior1, setModalPowerOnBehavior1] = useState(false);
@@ -49,6 +56,13 @@ export default function DeviceDetail(props) {
         const result = await postData(`/api/services/select/select_option`, { entity_id: switchKey.get('powerOnBehavior1'), option: value.toLowerCase() }, nowUser.token);
         setPowerOnBehavior1(value);
         setModalPowerOnBehavior1(false);
+        if (recordScenario) {
+            setScenario([...scenario, {
+                url: `/api/services/select/select_option`,
+                body: { entity_id: switchKey.get('powerOnBehavior1'), option: value.toLowerCase() },
+                accessToken: nowUser.token
+            }])
+        }
     };
     const [powerOnBehavior2, setPowerOnBehavior2] = useState('On');
     const [modalPowerOnBehavior2, setModalPowerOnBehavior2] = useState(false);
@@ -56,14 +70,35 @@ export default function DeviceDetail(props) {
         const result = await postData(`/api/services/select/select_option`, { entity_id: switchKey.get('powerOnBehavior2'), option: value.toLowerCase() }, nowUser.token);
         setPowerOnBehavior2(value);
         setModalPowerOnBehavior2(false);
+        if (recordScenario) {
+            setScenario([...scenario, {
+                url: `/api/services/select/select_option`,
+                body: { entity_id: switchKey.get('powerOnBehavior2'), option: value.toLowerCase() },
+                accessToken: nowUser.token
+            }])
+        }
     };
 
     const [switchStatus1, setSwitchStatus1] = useState(true);
     const handleChangeSwitchStatus1 = async () => {
         if (switchStatus1) {
             const result = await postData(`/api/services/switch/turn_off`, { entity_id: switchKey.get('state1') }, nowUser.token);
+            if (recordScenario) {
+                setScenario([...scenario, {
+                    url: `/api/services/switch/turn_off`,
+                    body: { entity_id: switchKey.get('state1') },
+                    accessToken: nowUser.token
+                }])
+            }
         } else {
             const result = await postData(`/api/services/switch/turn_on`, { entity_id: switchKey.get('state1') }, nowUser.token);
+            if (recordScenario) {
+                setScenario([...scenario, {
+                    url: `/api/services/switch/turn_on`,
+                    body: { entity_id: switchKey.get('state1') },
+                    accessToken: nowUser.token
+                }])
+            }
         }
         setSwitchStatus1(!switchStatus1);
     }
@@ -72,8 +107,22 @@ export default function DeviceDetail(props) {
     const handleChangeSwitchStatus2 = async () => {
         if (switchStatus2) {
             const result = await postData(`/api/services/switch/turn_off`, { entity_id: switchKey.get('state2') }, nowUser.token);
+            if (recordScenario) {
+                setScenario([...scenario, {
+                    url: `/api/services/switch/turn_off`,
+                    body: { entity_id: switchKey.get('state2') },
+                    accessToken: nowUser.token
+                }])
+            }
         } else {
             const result = await postData(`/api/services/switch/turn_on`, { entity_id: switchKey.get('state2') }, nowUser.token);
+            if (recordScenario) {
+                setScenario([...scenario, {
+                    url: `/api/services/switch/turn_on`,
+                    body: { entity_id: switchKey.get('state2') },
+                    accessToken: nowUser.token
+                }])
+            }
         }
         setSwitchStatus2(!switchStatus2);
     }
@@ -84,6 +133,13 @@ export default function DeviceDetail(props) {
         const result = await postData(`/api/services/select/select_option`, { entity_id: switchKey.get('indicatorMode'), option: value.toLowerCase() }, nowUser.token);
         setIndicatorMode(value);
         setModalIndicatorMode(false);
+        if (recordScenario) {
+            setScenario([...scenario, {
+                url: `/api/services/select/select_option`,
+                body: { entity_id: switchKey.get('indicatorMode'), option: value.toLowerCase() },
+                accessToken: nowUser.token
+            }])
+        }
     };
 
     const [brightness, setBrightness] = useState(0);
@@ -92,6 +148,13 @@ export default function DeviceDetail(props) {
         const result = await postData(`/api/services/number/set_value`, { entity_id: switchKey.get('brightness'), value: value }, nowUser.token);
         setBrightness(value);
         setModalBrightness(false);
+        if (recordScenario) {
+            setScenario([...scenario, {
+                url: `/api/services/number/set_value`,
+                body: { entity_id: switchKey.get('brightness'), value: value },
+                accessToken: nowUser.token
+            }])
+        }
     };
 
     const [onColor, setOnColor] = useState("");
@@ -100,6 +163,13 @@ export default function DeviceDetail(props) {
         const result = await postData(`/api/services/select/select_option`, { entity_id: switchKey.get('onColor'), option: value }, nowUser.token);
         setOnColor(value);
         setModalOnColor(false);
+        if (recordScenario) {
+            setScenario([...scenario, {
+                url: `/api/services/select/select_option`,
+                body: { entity_id: switchKey.get('onColor'), option: value },
+                accessToken: nowUser.token
+            }])
+        }
     };
 
     const [offColor, setOffColor] = useState("");
@@ -108,14 +178,35 @@ export default function DeviceDetail(props) {
         const result = await postData(`/api/services/select/select_option`, { entity_id: switchKey.get('offColor'), option: value }, nowUser.token);
         setOffColor(value);
         setModalOffColor(false);
+        if (recordScenario) {
+            setScenario([...scenario, {
+                url: `/api/services/select/select_option`,
+                body: { entity_id: switchKey.get('offColor'), option: value },
+                accessToken: nowUser.token
+            }])
+        }
     };
 
     const [childLock, setChildLock] = useState(false);
     const handleChildLock = async () => {
         if (!childLock) {
             const result = await postData(`/api/services/lock/lock`, { entity_id: switchKey.get('childLock') }, nowUser.token);
+            if (recordScenario) {
+                setScenario([...scenario, {
+                    url: `/api/services/lock/lock`,
+                    body: { entity_id: switchKey.get('childLock') },
+                    accessToken: nowUser.token
+                }])
+            }
         } else {
             const result = await postData(`/api/services/lock/unlock`, { entity_id: switchKey.get('childLock') }, nowUser.token);
+            if (recordScenario) {
+                setScenario([...scenario, {
+                    url: `/api/services/lock/unlock`,
+                    body: { entity_id: switchKey.get('childLock') },
+                    accessToken: nowUser.token
+                }])
+            }
         }
         setChildLock(!childLock);
     }
@@ -124,8 +215,22 @@ export default function DeviceDetail(props) {
     const handleBlacklightMode = async () => {
         if (backlightMode) {
             const result = await postData(`/api/services/switch/turn_off`, { entity_id: switchKey.get('blackLight') }, nowUser.token);
+            if (recordScenario) {
+                setScenario([...scenario, {
+                    url: `/api/services/switch/turn_off`,
+                    body: { entity_id: switchKey.get('blackLight') },
+                    accessToken: nowUser.token
+                }])
+            }
         } else {
             const result = await postData(`/api/services/switch/turn_on`, { entity_id: switchKey.get('blackLight') }, nowUser.token);
+            if (recordScenario) {
+                setScenario([...scenario, {
+                    url: `/api/services/switch/turn_on`,
+                    body: { entity_id: switchKey.get('blackLight') },
+                    accessToken: nowUser.token
+                }])
+            }
         }
         setBacklightMode(!backlightMode);
     }
@@ -133,6 +238,13 @@ export default function DeviceDetail(props) {
     const [countdown1, setCountdown1] = useState(0);
     const handleCountdown1 = async (value) => {
         const result = await postData(`/api/services/number/set_value`, { entity_id: switchKey.get('countdown1'), value: parseInt(value.nativeEvent.text.trim()) }, nowUser.token);
+        if (recordScenario) {
+            setScenario([...scenario, {
+                url: `/api/services/number/set_value`,
+                body: { entity_id: switchKey.get('countdown1'), value: parseInt(value.nativeEvent.text.trim()) },
+                accessToken: nowUser.token
+            }])
+        }
     }
 
     // const startCountdown1 = () => {
@@ -153,6 +265,13 @@ export default function DeviceDetail(props) {
     const [countdown2, setCountdown2] = useState(0);
     const handleCountdown2 = async (value) => {
         const result = await postData(`/api/services/number/set_value`, { entity_id: switchKey.get('countdown2'), value: parseInt(value.nativeEvent.text.trim()) }, nowUser.token);
+        if (recordScenario) {
+            setScenario([...scenario, {
+                url: `/api/services/number/set_value`,
+                body: { entity_id: switchKey.get('countdown2'), value: parseInt(value.nativeEvent.text.trim()) },
+                accessToken: nowUser.token
+            }])
+        }
     }
     const handleChangeCountdown2 = async (value) => {
         setCountdown2(parseInt(value.nativeEvent.text.trim()));
@@ -298,6 +417,13 @@ export default function DeviceDetail(props) {
                 fetchStatus2(nowUser.token);
                 fetchBlacklight(nowUser.token);
                 fetchChildLock(nowUser.token);
+                fetchPowerOnBehavior(nowUser.token);
+                fetchPowerOnBehavior1(nowUser.token);
+                fetchPowerOnBehavior2(nowUser.token);
+                fetchBrightNess(nowUser.token);
+                fetchOnColor(nowUser.token);
+                fetchOffColor(nowUser.token);
+                fetchIndicator(nowUser.token);
             }
         } catch (error) {
             console.error('Error fetching data:', error);
@@ -311,31 +437,35 @@ export default function DeviceDetail(props) {
     /**
      * schedule
      */
-    const [date1, setDate1] = useState('');
+    const [date1, setDate1] = useState(new Date());
     const [showDate1, setShowDate1] = useState(false);
     const [showTime1, setShowTime1] = useState(false);
     const [scheduleSwitchStatus1, setScheduleSwitchStatus1] = useState('');
     const [showModalScheduleSwitchStatus1, setShowModalScheduleSwitchStatus1] = useState(false);
 
     const handleDateSelected1 = (event, selectedDate) => {
-        let currentDate1 = selectedDate || date1;
-        setDate1(currentDate1);
-        setShowTime1(true);
+        if (event.type !== 'dismissed') {
+            let currentDate1 = selectedDate || date1;
+            setDate1(currentDate1);
+            setShowTime1(true);
+        }
         setShowDate1(false);
     };
 
     const handleTimeSelected1 = (event, selectedTime) => {
-        setShowDate1(false);
-        let currentTime1 = selectedTime || date1;
-        setDate1(new Date(
-            date1.getFullYear(),
-            date1.getMonth(),
-            date1.getDate(),
-            currentTime1.getHours(),
-            currentTime1.getMinutes()
-        ));
+        if (event.type !== 'dismissed') {
+            setShowDate1(false);
+            let currentTime1 = selectedTime || date1;
+            setDate1(new Date(
+                date1.getFullYear(),
+                date1.getMonth(),
+                date1.getDate(),
+                currentTime1.getHours(),
+                currentTime1.getMinutes()
+            ));
+            setShowTime1(false);
+        }
         setShowModalScheduleSwitchStatus1(true);
-        setShowTime1(false);
     };
 
     const toggleSwitchStatus1 = (status) => {
@@ -344,11 +474,16 @@ export default function DeviceDetail(props) {
         let now = new Date();
         let msUntilTimeout = date1.getTime() - now.getTime();
         if (msUntilTimeout > 0) {
-            setTimeout(() => {
-                alert("hết giờ");
+            setTimeout(async () => {
+                console.log("Hết thời gian hẹn giờ L1");
+                if (status == 'On') {
+                    const result = await postData(`/api/services/switch/turn_on`, { entity_id: switchKey.get('state1') }, nowUser.token);
+                } else if (status == 'Off') {
+                    const result = await postData(`/api/services/switch/turn_off`, { entity_id: switchKey.get('state1') }, nowUser.token);
+                }
             }, msUntilTimeout);
         } else {
-            allert("Thời gian đã chọn đã qua. Vui lòng chọn một thời điểm trong tương lai.");
+            alert("Thời gian đã chọn đã qua. Vui lòng chọn một thời điểm trong tương lai.");
         }
     };
 
@@ -356,31 +491,36 @@ export default function DeviceDetail(props) {
         setShowDate1(true);
     };
 
-    const [date2, setDate2] = useState('');
+    const [date2, setDate2] = useState(new Date());
     const [showDate2, setShowDate2] = useState(false);
     const [showTime2, setShowTime2] = useState(false);
     const [scheduleSwitchStatus2, setScheduleSwitchStatus2] = useState('');
     const [showModalScheduleSwitchStatus2, setShowModalScheduleSwitchStatus2] = useState(false);
 
     const handleDateSelected2 = (event, selectedDate) => {
-        let currentDate2 = selectedDate || date2;
-        setDate2(currentDate2);
-        setShowTime2(true);
+        if (event.type !== 'dismissed') {
+            let currentDate2 = selectedDate || date2;
+            setDate2(currentDate2);
+            setShowTime2(true);
+            console.log(selectedDate);
+        }
         setShowDate2(false);
     };
 
     const handleTimeSelected2 = (event, selectedTime) => {
-        setShowDate2(false);
-        let currentTime2 = selectedTime || date2;
-        setDate2(new Date(
-            date2.getFullYear(),
-            date2.getMonth(),
-            date2.getDate(),
-            currentTime2.getHours(),
-            currentTime2.getMinutes()
-        ));
+        if (event.type !== 'dismissed') {
+            setShowDate2(false);
+            let currentTime2 = selectedTime || date2;
+            setDate2(new Date(
+                date2.getFullYear(),
+                date2.getMonth(),
+                date2.getDate(),
+                currentTime2.getHours(),
+                currentTime2.getMinutes()
+            ));
+            setShowModalScheduleSwitchStatus2(true)
+        }
         setShowTime2(false);
-        setShowModalScheduleSwitchStatus2(true)
     };
 
     const toggleSwitchStatus2 = (status) => {
@@ -389,16 +529,75 @@ export default function DeviceDetail(props) {
         let now = new Date();
         let msUntilTimeout = date2.getTime() - now.getTime();
         if (msUntilTimeout > 0) {
-            setTimeout(() => {
-                alert("hết giờ");
+            setTimeout(async () => {
+                console.log("Hết thời gian hẹn giờ L2");
+                if (status == 'On') {
+                    const result = await postData(`/api/services/switch/turn_on`, { entity_id: switchKey.get('state2') }, nowUser.token);
+                } else if (status == 'Off') {
+                    const result = await postData(`/api/services/switch/turn_off`, { entity_id: switchKey.get('state2') }, nowUser.token);
+                }
             }, msUntilTimeout);
         } else {
-            allert("Thời gian đã chọn đã qua. Vui lòng chọn một thời điểm trong tương lai.");
+            alert("Thời gian đã chọn đã qua. Vui lòng chọn một thời điểm trong tương lai.");
         }
     };
     const showDatePicker2 = () => {
         setShowDate2(true);
     };
+
+    const [scenario, setScenario] = useState([]);
+    const [recordScenario, setrecordScenario] = useState(false);
+    useEffect(() => {
+        const checkHaveScenario = async () => {
+            try {
+                const localScenario = await AsyncStorage.getItem(scenarioKey);
+                if (localScenario !== null) {
+                    let scenarioParse = JSON.parse(localScenario);
+                    setScenario(scenarioParse);
+                } else {
+                    setScenario([]);
+                }
+            } catch (error) {
+                console.error('Failed to load localScenario:', error);
+            }
+        };
+        checkHaveScenario();
+    }, []);
+
+    const handleDeleteScenario = async () => {
+        try {
+            const localScenario = await AsyncStorage.removeItem(scenarioKey);
+            setrecordScenario(false);
+            setScenario([]);
+        } catch (error) {
+            console.error('Failed to load localScenario:', error);
+        }
+    }
+    const [isRunScenario, setIsRunScenario] = useState(false);
+    const handlePlayOrSetScenario = async () => {
+        // ghi kịch bản
+        if (scenario.length == 0 && recordScenario == false) {
+            setrecordScenario(true);
+        } else if (scenario.length > 0 && recordScenario == false) {
+            setIsRunScenario(true)
+            // chạy kịch bản
+            let delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+            await delay(1000); // Dừng lại 1 giây
+            for (let value of scenario) {
+                const result = await postData(value.url, value.body, nowUser.token);
+                await delay(1000); // Dừng lại 1 giây
+            }
+            setIsRunScenario(false)
+        } else if (recordScenario == true) {
+            // Dừng ghi
+            setrecordScenario(false);
+            await AsyncStorage.setItem(scenarioKey, JSON.stringify(scenario));
+        }
+    }
+
+    useEffect(() => {
+        console.log(scenario);
+    }, [scenario]);
 
     return (
         <SafeAreaView style={[styles.customSafeArea, { backgroundColor: colors.white }]}>
@@ -700,7 +899,7 @@ export default function DeviceDetail(props) {
                         <Text style={deviceCss.label}>Schedule L1</Text>
                         <View style={{ flexDirection: 'row' }}>
                             <Text style={[deviceCss.label, { marginRight: 5 }]}>{scheduleSwitchStatus1 === 'On' ? 'Bật lúc' : (scheduleSwitchStatus1 === 'Off' ? 'Tắt lúc' : 'No')}</Text>
-                            <Text style={deviceCss.label}>{date1.toLocaleString()}</Text>
+                            <Text style={deviceCss.label}>{scheduleSwitchStatus1 === 'On' || scheduleSwitchStatus1 === 'Off' ? date1.toLocaleString() : ''}</Text>
                         </View>
                         {(showDate1 && (
                             <DateTimePicker
@@ -750,7 +949,7 @@ export default function DeviceDetail(props) {
                         <Text style={deviceCss.label}>Schedule L2</Text>
                         <View style={{ flexDirection: 'row' }}>
                             <Text style={[deviceCss.label, { marginRight: 5 }]}>{scheduleSwitchStatus2 === 'On' ? 'Bật lúc' : (scheduleSwitchStatus2 === 'Off' ? 'Tắt lúc' : 'No')}</Text>
-                            <Text style={deviceCss.label}>{date2.toLocaleString()}</Text>
+                            <Text style={deviceCss.label}>{scheduleSwitchStatus2 === 'On' || scheduleSwitchStatus2 === 'Off' ? date2.toLocaleString() : ''}</Text>
                         </View>
                         {(showDate2 && (
                             <DateTimePicker
@@ -793,6 +992,24 @@ export default function DeviceDetail(props) {
                         </View>
                     </Modal>
                     <View style={deviceCss.separator} />
+
+                    <View style={deviceCss.switchRow}>
+                        <TouchableOpacity
+                            style={[recordScenario ? deviceCss.buttonScenarioRecord : (isRunScenario ? deviceCss.buttonScenarioDisable : deviceCss.buttonScenario), { marginRight: 8 }]}
+                            onPress={handlePlayOrSetScenario}
+                            disabled={isRunScenario}
+                        >
+                            <Text style={[deviceCss.buttonText, { color: colors.white }]}>{(scenario.length > 0 && !recordScenario) ? 'Chạy kịch bản' : (scenario.length == 0 && !recordScenario ? 'Ghi lại kịch bản' : ('Dừng ghi'))}</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={[(scenario.length > 0 && !recordScenario && !isRunScenario) ? deviceCss.buttonScenario : deviceCss.buttonScenarioDisable, { marginLeft: 8 }]}
+                            disabled={scenario.length == 0 || isRunScenario}
+                            onPress={handleDeleteScenario}
+                        >
+                            <Text style={[deviceCss.buttonText, { color: colors.white }]}>Xóa kịch bản</Text>
+                        </TouchableOpacity>
+                    </View>
+                    <View style={deviceCss.separator} />
                 </View>
             </ScrollView>
         </SafeAreaView>
@@ -825,9 +1042,26 @@ const deviceCss = StyleSheet.create({
         alignItems: 'center',
         paddingVertical: 16,
     },
-    button: {
+    buttonScenario: {
         flex: 1, // Each button should take equal space
-        marginHorizontal: 5, // Optional: space between buttons
+        backgroundColor: colors.primary,
+        paddingVertical: 10,
+        alignItems: 'center',
+        borderRadius: 8,
+    },
+    buttonScenarioRecord: {
+        flex: 1, // Each button should take equal space
+        backgroundColor: colors.red,
+        paddingVertical: 10,
+        alignItems: 'center',
+        borderRadius: 8,
+    },
+    buttonScenarioDisable: {
+        flex: 1, // Each button should take equal space
+        backgroundColor: colors.dark_grey,
+        paddingVertical: 10,
+        alignItems: 'center',
+        borderRadius: 8,
     },
     label: {
         fontSize: 16,
