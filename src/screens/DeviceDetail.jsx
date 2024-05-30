@@ -4,21 +4,16 @@ import {
     Text,
     View,
     TouchableOpacity,
-    FlatList,
     StyleSheet,
     ScrollView,
-    Dimensions,
     Switch,
     Modal,
-    Button,
     TextInput,
 } from "react-native";
 import { styles } from "../components/GlobalStyles";
 import colors from "../constants/colors";
 import Entypo from '@expo/vector-icons/Entypo';
 import { useNavigation } from "@react-navigation/native";
-import RNPickerSelect from 'react-native-picker-select';
-import { Picker } from '@react-native-picker/picker';
 import { device } from "../../utils/device";
 import { oneHundredElement, scenarioKey, switchKey, userKey } from "../constants/common";
 import { switchColor } from "../constants/switchColor";
@@ -26,7 +21,6 @@ import useStore from "../../utils/store";
 import { getData, postData } from "../../utils/commonRequest";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import DateTimePicker from '@react-native-community/datetimepicker';
-import RNDateTimePicker from "@react-native-community/datetimepicker";
 
 export default function DeviceDetail(props) {
     //navigation
@@ -380,7 +374,7 @@ export default function DeviceDetail(props) {
         const checkCurrentUser = async () => {
             try {
                 const user = await AsyncStorage.getItem(userKey);
-                if (user !== null) {
+                if (user) {
                     let userParsed = JSON.parse(user);
                     setCurrentUser(JSON.parse(user));
                     setNowUser(JSON.parse(user));
@@ -396,7 +390,7 @@ export default function DeviceDetail(props) {
                     fetchOffColor(userParsed.token);
                     fetchIndicator(userParsed.token);
                 } else {
-                    replace('Login');
+                    navigation.replace('Login');
                 }
             } catch (error) {
                 console.error('Failed to load current user:', error);

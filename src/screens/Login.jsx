@@ -34,7 +34,7 @@ export default function Login() {
     const handleLogin = async () => {
         if (userName === fixUserName && password === fixPassword) {
             const user = { name: 'Bùi Việt Anh', token: token }; // Example user data
-            await AsyncStorage.setItem('currentUser', JSON.stringify(user));
+            await AsyncStorage.setItem(userKey, JSON.stringify(user));
             setCurrentUser(user);
             navigation.replace('UIScreen'); // Navigate to Home after login
         } else {
@@ -45,15 +45,7 @@ export default function Login() {
     /**
      * check existed user
      */
-    const fetchUser = async () => {
-        const currentUser = await AsyncStorage.getItem(userKey);
-        if (currentUser) {
-            navigation.replace("UIScreen");
-        }
-    }
-    useEffect(() => {
-        fetchUser();
-    })
+
     return (
         <SafeAreaView style={[styles.customSafeArea, {backgroundColor: colors.white}]}>
             <View style={styles.container}>
