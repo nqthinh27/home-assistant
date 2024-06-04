@@ -30,7 +30,7 @@ export default function Setting() {
         navigation.replace('Login');
     }
     return (
-        <SafeAreaView style={[styles.customSafeArea, { backgroundColor: colors.white }]}>
+        <SafeAreaView style={[styles.customSafeArea]}>
             <View style={styles.container}>
                 <TouchableOpacity
                     style={settingCss.loginButtonViewlogin}

@@ -17,6 +17,8 @@ import { styles } from "../components/GlobalStyles";
 import colors from "../constants/colors";
 import Entypo from '@expo/vector-icons/Entypo';
 import useStore from "../../utils/store";
+import { postData } from "../../utils/commonRequest";
+import { postDataBackend } from "../../utils/commonRequestBackend";
 
 export default function Login() {
     //navigation
@@ -29,25 +31,52 @@ export default function Login() {
     const [isLoading, setInLoading] = useState(false);
 
     const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiI0M2QwZDhmZTQzZGY0MWY4Yjc1NjhmZTgwNmUxOTQ3YiIsImlhdCI6MTcxNjQ3Nzg5OCwiZXhwIjoyMDMxODM3ODk4fQ.-5RvB-i1_YOutT0N9SGqX_AXl7N2FBEueFLmtWsJN3c';
-    const fixUserName = 'bva';
-    const fixPassword = '123456';
     const handleLogin = async () => {
-        if (userName === fixUserName && password === fixPassword) {
-            const user = { name: 'Bùi Việt Anh', token: token }; // Example user data
-            await AsyncStorage.setItem(userKey, JSON.stringify(user));
-            setCurrentUser(user);
-            navigation.replace('UIScreen'); // Navigate to Home after login
-        } else {
-            alert('Email hoặc password không đúng. Vui lòng thử lại!');
+        try {
+            const reqBody = {
+                username: userName,
+                password: password,
+                rememberMe: true,
+            }
+            const loginResponse = await postDataBackend('/api/authenticate', reqBody, '');
+            console.log(loginResponse);
+            if (loginResponse) {
+                console.log('token: ' + loginResponse.httpHeaders.Authorization[0]);
+                console.log('user: ' + loginResponse.customUserDetails);
+                let loginUser = {
+                    tokenBackend: loginResponse.httpHeaders.Authorization[0],
+                    customUserDetails: loginResponse.customUserDetails,
+                    token: token
+                }
+                await AsyncStorage.setItem(userKey, JSON.stringify(loginUser));
+                setCurrentUser(loginUser);
+                navigation.replace('UIScreen'); // Navigate to Home after login
+            }
+            // if (userName === fixUserName && password === fixPassword) {
+            //     const user = { name: 'Bùi Việt Anh', token: token }; // Example user data
+            //     setCurrentUser(user);
+            //     navigation.replace('UIScreen'); // Navigate to Home after login
+            // }
+        } catch (e) {
+            console.error(e);
+            alert("Email hoặc password không đúng. Vui lòng thử lại!")
         }
     };
 
     /**
      * check existed user
      */
-
+    const fetchUser = async () => {
+        const currentUser = await AsyncStorage.getItem(userKey);
+        if (currentUser) {
+            navigation.replace("UIScreen");
+        }
+    }
+    useEffect(() => {
+        fetchUser();
+    })
     return (
-        <SafeAreaView style={[styles.customSafeArea, {backgroundColor: colors.white}]}>
+        <SafeAreaView style={[styles.customSafeArea, { backgroundColor: colors.white }]}>
             <View style={styles.container}>
                 {/* <Text style={styles.h1}>Tất cả thiết bị</Text> */}
                 <View style={loginCss.loginHeader}>

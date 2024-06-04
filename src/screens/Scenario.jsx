@@ -4,44 +4,72 @@ import {
     Text,
     View,
     TouchableOpacity,
+    FlatList,
     StyleSheet,
     ScrollView,
-    Switch,
+    Dimensions,
     Modal,
+    Switch,
     TextInput,
 } from "react-native";
 import { styles } from "../components/GlobalStyles";
 import colors from "../constants/colors";
 import Entypo from '@expo/vector-icons/Entypo';
 import { useNavigation } from "@react-navigation/native";
-import { device } from "../../utils/device";
-import { oneHundredElement, scenarioKey, switchKey, userKey } from "../constants/common";
-import { switchColor } from "../constants/switchColor";
+import { getDataBackend, postDataBackend } from "../../utils/commonRequestBackend";
 import useStore from "../../utils/store";
-import { getData, postData } from "../../utils/commonRequest";
+import { device } from "../../utils/device";
+import { oneHundredElement, switchKey, userKey } from "../constants/common";
+import { switchColor } from "../constants/switchColor";
+import { getData } from "../../utils/commonRequest";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import DateTimePicker from '@react-native-community/datetimepicker';
 
-export default function DeviceDetail(props) {
-    //navigation
+export default function Scenario() {
     const navigation = useNavigation();
-    const { currentUser, setCurrentUser, removeCurrentUser, entityId, setEntityId } = useStore();
-
-    const [nowUser, setNowUser] = useState(null);
-    //function of navigate 
     const { navigate, goBack } = navigation;
+    // Chi tiết kịch bản hiện tại
+    const [scenarios, setScenarios] = useState([]);
+    const { currentUser, setCurrentUser, removeCurrentUser, entityId, setEntityId, scenarioId, setScenarioId } = useStore();
+    const fetchScenariosIfRunMode = async () => {
+        const dataRes = await getDataBackend(`/api/scenarios/${scenarioId}`, currentUser.tokenBackend);
+        setScenarios(dataRes);
+        dataRes.action.forEach(element => {
+            setScenario([...scenario, JSON.parse(element.payload)])
+        });
+    }
+    useEffect(() => {
+        if (scenarioId != null) {
+            fetchScenariosIfRunMode();
+        }
+    }, [])
+
+    const [scenario, setScenario] = useState([]);
+    const runScenario = async () => {
+        try {
+            for (let value of scenario) {
+                const result = await postData(value.url, value.body, currentUser.token);
+            }
+            alert('Chạy kịch bản thành công!')
+        } catch (e) {
+            console.error(e);
+            alert("Chạy kịch bản thất bại")
+        }
+    }
     const [powerOnBehavior, setPowerOnBehavior] = useState('On');
     const [modalPowerOnBehavior, setModalPowerOnBehavior] = useState(false);
     const handleOnBehaviorPress = async (value) => {
-        const result = await postData(`/api/services/select/select_option`, { entity_id: switchKey.get('powerOnBehavior_begin') + entityId + switchKey.get('powerOnBehavior_end'), option: value.toLowerCase() }, nowUser.token);
-        setPowerOnBehavior(value);
-        setModalPowerOnBehavior(false);
-        if (recordScenario) {
-            setScenario([...scenario, {
-                url: `/api/services/select/select_option`,
-                body: { entity_id: switchKey.get('powerOnBehavior_begin') + entityId + switchKey.get('powerOnBehavior_end'), option: value.toLowerCase() },
-                accessToken: nowUser.token
-            }])
+        if (scenarioId == null) {
+            setPowerOnBehavior(value);
+            setModalPowerOnBehavior(false);
+            if (recordScenario) {
+                setScenario([...scenario, {
+                    url: `/api/services/select/select_option`,
+                    body: { entity_id: switchKey.get('powerOnBehavior_begin') + entityId + switchKey.get('powerOnBehavior_end'), option: value.toLowerCase() },
+                }])
+            }
+        } else {
+            // const result = await postData(`/api/services/select/select_option`, { entity_id: switchKey.get('powerOnBehavior_begin') + entityId + switchKey.get('powerOnBehavior_end'), option: value.toLowerCase() }, nowUser.token);
         }
     };
     const [powerOnBehavior1, setPowerOnBehavior1] = useState('On');
@@ -260,6 +288,120 @@ export default function DeviceDetail(props) {
     }
 
     /**
+     * schedule
+     */
+    const [date1, setDate1] = useState(new Date());
+    const [showDate1, setShowDate1] = useState(false);
+    const [showTime1, setShowTime1] = useState(false);
+    const [scheduleSwitchStatus1, setScheduleSwitchStatus1] = useState('');
+    const [showModalScheduleSwitchStatus1, setShowModalScheduleSwitchStatus1] = useState(false);
+
+    const handleDateSelected1 = (event, selectedDate) => {
+        if (event.type !== 'dismissed') {
+            let currentDate1 = selectedDate || date1;
+            setDate1(currentDate1);
+            setShowTime1(true);
+        }
+        setShowDate1(false);
+    };
+
+    const handleTimeSelected1 = (event, selectedTime) => {
+        if (event.type !== 'dismissed') {
+            setShowDate1(false);
+            let currentTime1 = selectedTime || date1;
+            setDate1(new Date(
+                date1.getFullYear(),
+                date1.getMonth(),
+                date1.getDate(),
+                currentTime1.getHours(),
+                currentTime1.getMinutes()
+            ));
+            setShowTime1(false);
+        }
+        setShowModalScheduleSwitchStatus1(true);
+    };
+
+    const toggleSwitchStatus1 = (status) => {
+        setScheduleSwitchStatus1(status);
+        setShowModalScheduleSwitchStatus1(false);
+        let now = new Date();
+        let msUntilTimeout = date1.getTime() - now.getTime();
+        if (msUntilTimeout > 0) {
+            setTimeout(async () => {
+                console.log("Hết thời gian hẹn giờ L1");
+                if (status == 'On') {
+                    const result = await postData(`/api/services/switch/turn_on`, { entity_id: switchKey.get('state1_begin') + entityId + switchKey.get('state1_end') }, nowUser.token);
+                } else if (status == 'Off') {
+                    const result = await postData(`/api/services/switch/turn_off`, { entity_id: switchKey.get('state1_begin') + entityId + switchKey.get('state1_end') }, nowUser.token);
+                }
+            }, msUntilTimeout);
+        } else {
+            alert("Thời gian đã chọn đã qua. Vui lòng chọn một thời điểm trong tương lai.");
+        }
+    };
+
+    const showDatePicker1 = () => {
+        if (scenarioId == null)
+            setShowDate1(true);
+    };
+
+    const [date2, setDate2] = useState(new Date());
+    const [showDate2, setShowDate2] = useState(false);
+    const [showTime2, setShowTime2] = useState(false);
+    const [scheduleSwitchStatus2, setScheduleSwitchStatus2] = useState('');
+    const [showModalScheduleSwitchStatus2, setShowModalScheduleSwitchStatus2] = useState(false);
+
+    const handleDateSelected2 = (event, selectedDate) => {
+        if (event.type !== 'dismissed') {
+            let currentDate2 = selectedDate || date2;
+            setDate2(currentDate2);
+            setShowTime2(true);
+            console.log(selectedDate);
+        }
+        setShowDate2(false);
+    };
+
+    const handleTimeSelected2 = (event, selectedTime) => {
+        if (event.type !== 'dismissed') {
+            setShowDate2(false);
+            let currentTime2 = selectedTime || date2;
+            setDate2(new Date(
+                date2.getFullYear(),
+                date2.getMonth(),
+                date2.getDate(),
+                currentTime2.getHours(),
+                currentTime2.getMinutes()
+            ));
+            setShowModalScheduleSwitchStatus2(true)
+        }
+        setShowTime2(false);
+    };
+
+    const toggleSwitchStatus2 = (status) => {
+        setScheduleSwitchStatus2(status);
+        setShowModalScheduleSwitchStatus2(false);
+        let now = new Date();
+        let msUntilTimeout = date2.getTime() - now.getTime();
+        if (msUntilTimeout > 0) {
+            setTimeout(async () => {
+                console.log("Hết thời gian hẹn giờ L2");
+                if (status == 'On') {
+                    const result = await postData(`/api/services/switch/turn_on`, { entity_id: switchKey.get('state2_begin') + entityId + switchKey.get('state2_end') }, nowUser.token);
+                } else if (status == 'Off') {
+                    const result = await postData(`/api/services/switch/turn_off`, { entity_id: switchKey.get('state2_begin') + entityId + switchKey.get('state2_end') }, nowUser.token);
+                }
+            }, msUntilTimeout);
+        } else {
+            alert("Thời gian đã chọn đã qua. Vui lòng chọn một thời điểm trong tương lai.");
+        }
+    };
+    const showDatePicker2 = () => {
+        if (scenarioId == null)
+            setShowDate2(true);
+    };
+
+
+    /**
      * Get trạng thái của các nút
      */
     const fetchStatus1 = async (token) => {
@@ -359,13 +501,11 @@ export default function DeviceDetail(props) {
         }
     }
     useEffect(() => {
-        const checkCurrentUser = async () => {
+        const fetchDataIfCreateMode = async () => {
             try {
                 const user = await AsyncStorage.getItem(userKey);
                 if (user) {
                     let userParsed = JSON.parse(user);
-                    setCurrentUser(JSON.parse(user));
-                    setNowUser(JSON.parse(user));
                     fetchStatus1(userParsed.token);
                     fetchStatus2(userParsed.token);
                     fetchBlacklight(userParsed.token);
@@ -381,515 +521,355 @@ export default function DeviceDetail(props) {
                     navigation.replace('Login');
                 }
             } catch (error) {
-                console.error('Failed to load current user:', error);
+                console.error(error);
             }
         };
-        checkCurrentUser();
-    }, []);
-
-    useEffect(() => {
-        const intervalId = setInterval(fetchData, 500); // Gọi fetchData mỗi 0.5 giây
-
-        return () => clearInterval(intervalId);
-    }, [nowUser]);
-    const fetchData = async () => {
-        try {
-            if (nowUser) {
-                fetchStatus1(nowUser.token);
-                fetchStatus2(nowUser.token);
-                fetchBlacklight(nowUser.token);
-                fetchChildLock(nowUser.token);
-                fetchPowerOnBehavior(nowUser.token);
-                fetchPowerOnBehavior1(nowUser.token);
-                fetchPowerOnBehavior2(nowUser.token);
-                fetchBrightNess(nowUser.token);
-                fetchOnColor(nowUser.token);
-                fetchOffColor(nowUser.token);
-                fetchIndicator(nowUser.token);
-            }
-        } catch (error) {
-            console.error('Error fetching data:', error);
+        if (scenarioId == null) {
+            fetchDataIfCreateMode();
         }
-    };
+    }, []);
 
     const toUpperCaseFirtChar = (string) => {
         return string.charAt(0).toUpperCase() + string.slice(1)
     }
 
-    /**
-     * schedule
-     */
-    const [date1, setDate1] = useState(new Date());
-    const [showDate1, setShowDate1] = useState(false);
-    const [showTime1, setShowTime1] = useState(false);
-    const [scheduleSwitchStatus1, setScheduleSwitchStatus1] = useState('');
-    const [showModalScheduleSwitchStatus1, setShowModalScheduleSwitchStatus1] = useState(false);
+    const handleRunOrSaveScenario = async () => {
+        // Luư kịch bản
+        if (scenarioId == null) {
 
-    const handleDateSelected1 = (event, selectedDate) => {
-        if (event.type !== 'dismissed') {
-            let currentDate1 = selectedDate || date1;
-            setDate1(currentDate1);
-            setShowTime1(true);
         }
-        setShowDate1(false);
-    };
-
-    const handleTimeSelected1 = (event, selectedTime) => {
-        if (event.type !== 'dismissed') {
-            setShowDate1(false);
-            let currentTime1 = selectedTime || date1;
-            setDate1(new Date(
-                date1.getFullYear(),
-                date1.getMonth(),
-                date1.getDate(),
-                currentTime1.getHours(),
-                currentTime1.getMinutes()
-            ));
-            setShowTime1(false);
-        }
-        setShowModalScheduleSwitchStatus1(true);
-    };
-
-    const toggleSwitchStatus1 = (status) => {
-        setScheduleSwitchStatus1(status);
-        setShowModalScheduleSwitchStatus1(false);
-        let now = new Date();
-        let msUntilTimeout = date1.getTime() - now.getTime();
-        if (msUntilTimeout > 0) {
-            setTimeout(async () => {
-                console.log("Hết thời gian hẹn giờ L1");
-                if (status == 'On') {
-                    const result = await postData(`/api/services/switch/turn_on`, { entity_id: switchKey.get('state1_begin') + entityId + switchKey.get('state1_end') }, nowUser.token);
-                } else if (status == 'Off') {
-                    const result = await postData(`/api/services/switch/turn_off`, { entity_id: switchKey.get('state1_begin') + entityId + switchKey.get('state1_end') }, nowUser.token);
-                }
-            }, msUntilTimeout);
-        } else {
-            alert("Thời gian đã chọn đã qua. Vui lòng chọn một thời điểm trong tương lai.");
-        }
-    };
-
-    const showDatePicker1 = () => {
-        setShowDate1(true);
-    };
-
-    const [date2, setDate2] = useState(new Date());
-    const [showDate2, setShowDate2] = useState(false);
-    const [showTime2, setShowTime2] = useState(false);
-    const [scheduleSwitchStatus2, setScheduleSwitchStatus2] = useState('');
-    const [showModalScheduleSwitchStatus2, setShowModalScheduleSwitchStatus2] = useState(false);
-
-    const handleDateSelected2 = (event, selectedDate) => {
-        if (event.type !== 'dismissed') {
-            let currentDate2 = selectedDate || date2;
-            setDate2(currentDate2);
-            setShowTime2(true);
-            console.log(selectedDate);
-        }
-        setShowDate2(false);
-    };
-
-    const handleTimeSelected2 = (event, selectedTime) => {
-        if (event.type !== 'dismissed') {
-            setShowDate2(false);
-            let currentTime2 = selectedTime || date2;
-            setDate2(new Date(
-                date2.getFullYear(),
-                date2.getMonth(),
-                date2.getDate(),
-                currentTime2.getHours(),
-                currentTime2.getMinutes()
-            ));
-            setShowModalScheduleSwitchStatus2(true)
-        }
-        setShowTime2(false);
-    };
-
-    const toggleSwitchStatus2 = (status) => {
-        setScheduleSwitchStatus2(status);
-        setShowModalScheduleSwitchStatus2(false);
-        let now = new Date();
-        let msUntilTimeout = date2.getTime() - now.getTime();
-        if (msUntilTimeout > 0) {
-            setTimeout(async () => {
-                console.log("Hết thời gian hẹn giờ L2");
-                if (status == 'On') {
-                    const result = await postData(`/api/services/switch/turn_on`, { entity_id: switchKey.get('state2_begin') + entityId + switchKey.get('state2_end') }, nowUser.token);
-                } else if (status == 'Off') {
-                    const result = await postData(`/api/services/switch/turn_off`, { entity_id: switchKey.get('state2_begin') + entityId + switchKey.get('state2_end') }, nowUser.token);
-                }
-            }, msUntilTimeout);
-        } else {
-            alert("Thời gian đã chọn đã qua. Vui lòng chọn một thời điểm trong tương lai.");
-        }
-    };
-    const showDatePicker2 = () => {
-        setShowDate2(true);
-    };
-
-    const [scenario, setScenario] = useState([]);
-    const [recordScenario, setrecordScenario] = useState(false);
-    useEffect(() => {
-        const checkHaveScenario = async () => {
-            try {
-                const localScenario = await AsyncStorage.getItem(scenarioKey);
-                if (localScenario !== null) {
-                    let scenarioParse = JSON.parse(localScenario);
-                    setScenario(scenarioParse);
-                } else {
-                    setScenario([]);
-                }
-            } catch (error) {
-                console.error('Failed to load localScenario:', error);
-            }
-        };
-        checkHaveScenario();
-    }, []);
-
-    const handleDeleteScenario = async () => {
-        try {
-            const localScenario = await AsyncStorage.removeItem(scenarioKey);
-            setrecordScenario(false);
-            setScenario([]);
-        } catch (error) {
-            console.error('Failed to load localScenario:', error);
+        // Chạy kịch bản
+        else {
+            runScenario()
         }
     }
-    const [isRunScenario, setIsRunScenario] = useState(false);
-    const handlePlayOrSetScenario = async () => {
-        // ghi kịch bản
-        if (scenario.length == 0 && recordScenario == false) {
-            setrecordScenario(true);
-        } else if (scenario.length > 0 && recordScenario == false) {
-            setIsRunScenario(true)
-            // chạy kịch bản
-            let delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-            await delay(1000); // Dừng lại 1 giây
-            for (let value of scenario) {
-                const result = await postData(value.url, value.body, nowUser.token);
-                await delay(1000); // Dừng lại 1 giây
-            }
-            setIsRunScenario(false)
-        } else if (recordScenario == true) {
-            // Dừng ghi
-            setrecordScenario(false);
-            await AsyncStorage.setItem(scenarioKey, JSON.stringify(scenario));
-        }
-    }
-
-    useEffect(() => {
-        console.log(scenario);
-    }, [scenario]);
-
     return (
         <SafeAreaView style={[styles.customSafeArea, { backgroundColor: colors.white }]}>
             <ScrollView style={styles.container}>
-                <View style={[styles.flexRow, {marginBottom: -8}]}>
+                <View style={styles.flexRow}>
                     <Entypo
                         name="chevron-left"
                         size={24}
-                        color={colors.black} 
-                        onPress={() => goBack()}/>
-                    <Text style={styles.headerText}>Bảng điều khiển</Text>
-                    <View style={{width: 24}}></View>
+                        color={colors.black}
+                        onPress={() => goBack()} />
+                    <View ></View>
+                    <Text style={styles.headerText}>Kịch bản</Text>
+                    <View style={{ width: 24 }}></View>
                 </View>
-                <View style={deviceCss.container}>
-                    <TouchableOpacity style={deviceCss.settingRow} onPress={() => {
-                        setModalPowerOnBehavior(true);
+                {scenarioId != null && <Text style={styles.subText}>{scenarios.name}</Text>}
+
+
+                <View style={scenarioCss.container}>
+                    <TouchableOpacity style={scenarioCss.settingRow} onPress={() => {
+                        if (scenarioId == null) setModalPowerOnBehavior(true);
                     }}>
-                        <Text style={deviceCss.label}>Power-on behavior</Text>
+                        <Text style={scenarioCss.label}>Power-on behavior</Text>
                         <Modal
                             // animationType="slide"
                             transparent={true}
                             visible={modalPowerOnBehavior}
                             onRequestClose={() => setModalPowerOnBehavior(false)}
                         >
-                            <View style={deviceCss.modalContainer}>
-                                <View style={deviceCss.modalView}>
-                                    <Text style={deviceCss.modalText}>Select Power-on behavior</Text>
+                            <View style={scenarioCss.modalContainer}>
+                                <View style={scenarioCss.modalView}>
+                                    <Text style={scenarioCss.modalText}>Select Power-on behavior</Text>
                                     <ScrollView contentContainerStyle={{ alignItems: 'center', width: device.width * 0.8 }}>
-                                        <TouchableOpacity style={deviceCss.button} onPress={() => handleOnBehaviorPress('On')}>
-                                            <Text style={deviceCss.buttonText}>On</Text>
+                                        <TouchableOpacity style={scenarioCss.button} onPress={() => handleOnBehaviorPress('On')}>
+                                            <Text style={scenarioCss.buttonText}>On</Text>
                                         </TouchableOpacity>
-                                        <TouchableOpacity style={deviceCss.button} onPress={() => handleOnBehaviorPress('Off')}>
-                                            <Text style={deviceCss.buttonText}>Off</Text>
+                                        <TouchableOpacity style={scenarioCss.button} onPress={() => handleOnBehaviorPress('Off')}>
+                                            <Text style={scenarioCss.buttonText}>Off</Text>
                                         </TouchableOpacity>
-                                        <TouchableOpacity style={deviceCss.button} onPress={() => handleOnBehaviorPress('Previous')}>
-                                            <Text style={deviceCss.buttonText}>Previous</Text>
+                                        <TouchableOpacity style={scenarioCss.button} onPress={() => handleOnBehaviorPress('Previous')}>
+                                            <Text style={scenarioCss.buttonText}>Previous</Text>
                                         </TouchableOpacity>
-                                        <TouchableOpacity style={deviceCss.button} onPress={() => setModalPowerOnBehavior(false)}>
-                                            <Text style={deviceCss.buttonText}>Cancel</Text>
+                                        <TouchableOpacity style={scenarioCss.button} onPress={() => setModalPowerOnBehavior(false)}>
+                                            <Text style={scenarioCss.buttonText}>Cancel</Text>
                                         </TouchableOpacity>
                                     </ScrollView>
                                 </View>
                             </View>
                         </Modal>
-                        <Text style={deviceCss.value}>{powerOnBehavior}</Text>
+                        <Text style={scenarioCss.value}>{powerOnBehavior}</Text>
                     </TouchableOpacity>
-                    <View style={deviceCss.separator} />
+                    <View style={scenarioCss.separator} />
 
-                    <TouchableOpacity style={deviceCss.settingRow} onPress={() => { setModalIndicatorMode(true); }}>
-                        <Text style={deviceCss.label}>Indicator mode</Text>
+                    <TouchableOpacity style={scenarioCss.settingRow} onPress={() => { if (scenarioId == null) setModalIndicatorMode(true); }}>
+                        <Text style={scenarioCss.label}>Indicator mode</Text>
                         <Modal
                             // animationType="slide"
                             transparent={true}
                             visible={modalIndicatorMode}
                             onRequestClose={() => setModalIndicatorMode(false)}
                         >
-                            <View style={deviceCss.modalContainer}>
-                                <View style={deviceCss.modalView}>
-                                    <Text style={deviceCss.modalText}>Select Indicator mode</Text>
+                            <View style={scenarioCss.modalContainer}>
+                                <View style={scenarioCss.modalView}>
+                                    <Text style={scenarioCss.modalText}>Select Indicator mode</Text>
                                     <ScrollView contentContainerStyle={{ alignItems: 'center', width: device.width * 0.8 }}>
-                                        <TouchableOpacity style={deviceCss.button} onPress={() => handleIndicatorModePress('None')}>
-                                            <Text style={deviceCss.buttonText}>None</Text>
+                                        <TouchableOpacity style={scenarioCss.button} onPress={() => handleIndicatorModePress('None')}>
+                                            <Text style={scenarioCss.buttonText}>None</Text>
                                         </TouchableOpacity>
-                                        <TouchableOpacity style={deviceCss.button} onPress={() => handleIndicatorModePress('Relay')}>
-                                            <Text style={deviceCss.buttonText}>Relay</Text>
+                                        <TouchableOpacity style={scenarioCss.button} onPress={() => handleIndicatorModePress('Relay')}>
+                                            <Text style={scenarioCss.buttonText}>Relay</Text>
                                         </TouchableOpacity>
-                                        <TouchableOpacity style={deviceCss.button} onPress={() => handleIndicatorModePress('Pos')}>
-                                            <Text style={deviceCss.buttonText}>Pos</Text>
+                                        <TouchableOpacity style={scenarioCss.button} onPress={() => handleIndicatorModePress('Pos')}>
+                                            <Text style={scenarioCss.buttonText}>Pos</Text>
                                         </TouchableOpacity>
-                                        <TouchableOpacity style={deviceCss.button} onPress={() => setModalIndicatorMode(false)}>
-                                            <Text style={deviceCss.buttonText}>Cancel</Text>
+                                        <TouchableOpacity style={scenarioCss.button} onPress={() => setModalIndicatorMode(false)}>
+                                            <Text style={scenarioCss.buttonText}>Cancel</Text>
                                         </TouchableOpacity>
                                     </ScrollView>
                                 </View>
                             </View>
                         </Modal>
-                        <Text style={deviceCss.value}>{indicatorMode}</Text>
+                        <Text style={scenarioCss.value}>{indicatorMode}</Text>
                     </TouchableOpacity>
-                    <View style={deviceCss.separator} />
+                    <View style={scenarioCss.separator} />
 
-                    <View style={deviceCss.switchRow}>
-                        <Text style={deviceCss.label}>Backlight Mode</Text>
+                    <View style={scenarioCss.switchRow}>
+                        <Text style={scenarioCss.label}>Backlight Mode</Text>
                         <Switch
                             value={backlightMode}
                             onValueChange={handleBlacklightMode}
                             style={{ height: 20 }}
+                            disabled={scenarioId != null}
                         />
                     </View>
-                    <View style={deviceCss.separator} />
+                    <View style={scenarioCss.separator} />
 
-                    <View style={deviceCss.switchRow}>
-                        <Text style={deviceCss.label}>Child Lock</Text>
+                    <View style={scenarioCss.switchRow}>
+                        <Text style={scenarioCss.label}>Child Lock</Text>
                         <Switch
                             value={childLock}
                             onValueChange={handleChildLock}
                             style={{ height: 20 }}
+                            disabled={scenarioId != null}
                         />
                     </View>
-                    <View style={deviceCss.separator} />
+                    <View style={scenarioCss.separator} />
 
-                    <TouchableOpacity style={deviceCss.settingRow} onPress={() => { setModalBrightness(true); }}>
-                        <Text style={deviceCss.label}>Brightness</Text>
+                    <TouchableOpacity style={scenarioCss.settingRow} onPress={() => { if (scenarioId == null) setModalBrightness(true); }}>
+                        <Text style={scenarioCss.label}>Brightness</Text>
                         <Modal
                             // animationType="slide"
                             transparent={true}
                             visible={modalBrightness}
                             onRequestClose={() => setModalBrightness(false)}
                         >
-                            <View style={deviceCss.modalContainer}>
-                                <View style={deviceCss.modalView}>
-                                    <Text style={deviceCss.modalText}>Select Indicator mode</Text>
+                            <View style={scenarioCss.modalContainer}>
+                                <View style={scenarioCss.modalView}>
+                                    <Text style={scenarioCss.modalText}>Select Indicator mode</Text>
                                     <ScrollView contentContainerStyle={{ alignItems: 'center', width: device.width * 0.8 }}>
                                         {oneHundredElement.map((value, index) => {
                                             return (
-                                                <TouchableOpacity style={deviceCss.button} onPress={() => handleBrightnessPress(value)} key={index}>
-                                                    <Text style={deviceCss.buttonText}>{value + '%'}</Text>
+                                                <TouchableOpacity style={scenarioCss.button} onPress={() => handleBrightnessPress(value)} key={index}>
+                                                    <Text style={scenarioCss.buttonText}>{value + '%'}</Text>
                                                 </TouchableOpacity>
                                             );
                                         })}
-                                        <TouchableOpacity style={deviceCss.button} onPress={() => setModalBrightness(false)}>
-                                            <Text style={deviceCss.buttonText}>Cancel</Text>
+                                        <TouchableOpacity style={scenarioCss.button} onPress={() => setModalBrightness(false)}>
+                                            <Text style={scenarioCss.buttonText}>Cancel</Text>
                                         </TouchableOpacity>
                                     </ScrollView>
                                 </View>
                             </View>
                         </Modal>
-                        <Text style={deviceCss.value}>{brightness + '%'}</Text>
+                        <Text style={scenarioCss.value}>{brightness + '%'}</Text>
                     </TouchableOpacity>
-                    <View style={deviceCss.separator} />
+                    <View style={scenarioCss.separator} />
 
-                    <TouchableOpacity style={deviceCss.settingRow} onPress={() => { setModalOnColor(true); }}>
-                        <Text style={deviceCss.label}>ON Color</Text>
+                    <TouchableOpacity style={scenarioCss.settingRow} onPress={() => { if (scenarioId == null) setModalOnColor(true); }}>
+                        <Text style={scenarioCss.label}>ON Color</Text>
                         <Modal
                             // animationType="slide"
                             transparent={true}
                             visible={modalOnColor}
                             onRequestClose={() => setModalOnColor(false)}
                         >
-                            <View style={deviceCss.modalContainer}>
-                                <View style={deviceCss.modalView}>
-                                    <Text style={deviceCss.modalText}>Select ON Color</Text>
+                            <View style={scenarioCss.modalContainer}>
+                                <View style={scenarioCss.modalView}>
+                                    <Text style={scenarioCss.modalText}>Select ON Color</Text>
                                     <ScrollView contentContainerStyle={{ alignItems: 'center', width: device.width * 0.8 }}>
                                         {switchColor.map((value, index) => {
                                             return (
-                                                <TouchableOpacity style={deviceCss.button} onPress={() => handleOnColorPress(value)} key={index}>
-                                                    <Text style={deviceCss.buttonText}>{value}</Text>
+                                                <TouchableOpacity style={scenarioCss.button} onPress={() => handleOnColorPress(value)} key={index}>
+                                                    <Text style={scenarioCss.buttonText}>{value}</Text>
                                                 </TouchableOpacity>
                                             );
                                         })}
-                                        <TouchableOpacity style={deviceCss.button} onPress={() => setModalOnColor(false)}>
-                                            <Text style={deviceCss.buttonText}>Cancel</Text>
+                                        <TouchableOpacity style={scenarioCss.button} onPress={() => setModalOnColor(false)}>
+                                            <Text style={scenarioCss.buttonText}>Cancel</Text>
                                         </TouchableOpacity>
                                     </ScrollView>
                                 </View>
                             </View>
                         </Modal>
-                        <Text style={deviceCss.value}>{onColor}</Text>
+                        <Text style={scenarioCss.value}>{onColor}</Text>
                     </TouchableOpacity>
-                    <View style={deviceCss.separator} />
+                    <View style={scenarioCss.separator} />
 
-                    <TouchableOpacity style={deviceCss.settingRow} onPress={() => { setModalOffColor(true); }}>
-                        <Text style={deviceCss.label}>OFF Color</Text>
+                    <TouchableOpacity style={scenarioCss.settingRow} onPress={() => { if (scenarioId == null) setModalOffColor(true); }}>
+                        <Text style={scenarioCss.label}>OFF Color</Text>
                         <Modal
                             // animationType="slide"
                             transparent={true}
                             visible={modalOffColor}
                             onRequestClose={() => setModalOffColor(false)}
                         >
-                            <View style={deviceCss.modalContainer}>
-                                <View style={deviceCss.modalView}>
-                                    <Text style={deviceCss.modalText}>Select OFF Color</Text>
+                            <View style={scenarioCss.modalContainer}>
+                                <View style={scenarioCss.modalView}>
+                                    <Text style={scenarioCss.modalText}>Select OFF Color</Text>
                                     <ScrollView contentContainerStyle={{ alignItems: 'center', width: device.width * 0.8 }}>
                                         {switchColor.map((value, index) => {
                                             return (
-                                                <TouchableOpacity style={deviceCss.button} onPress={() => handleOffColorPress(value)} key={index}>
-                                                    <Text style={deviceCss.buttonText}>{value}</Text>
+                                                <TouchableOpacity style={scenarioCss.button} onPress={() => handleOffColorPress(value)} key={index}>
+                                                    <Text style={scenarioCss.buttonText}>{value}</Text>
                                                 </TouchableOpacity>
                                             );
                                         })}
-                                        <TouchableOpacity style={deviceCss.button} onPress={() => setModalOffColor(false)}>
-                                            <Text style={deviceCss.buttonText}>Cancel</Text>
+                                        <TouchableOpacity style={scenarioCss.button} onPress={() => setModalOffColor(false)}>
+                                            <Text style={scenarioCss.buttonText}>Cancel</Text>
                                         </TouchableOpacity>
                                     </ScrollView>
                                 </View>
                             </View>
                         </Modal>
-                        <Text style={deviceCss.value}>{offColor}</Text>
+                        <Text style={scenarioCss.value}>{offColor}</Text>
                     </TouchableOpacity>
-                    <View style={deviceCss.separator} />
+                    <View style={scenarioCss.separator} />
 
 
-                    <View style={deviceCss.switchRow}>
-                        <Text style={deviceCss.label}>Status L1</Text>
+                    <View style={scenarioCss.switchRow}>
+                        <Text style={scenarioCss.label}>Status L1</Text>
                         <Switch
                             value={switchStatus1}
                             onValueChange={handleChangeSwitchStatus1}
                             style={{ height: 20 }}
+                            disabled={scenarioId != null}
                         />
                     </View>
-                    <View style={deviceCss.separator} />
+                    <View style={scenarioCss.separator} />
 
-                    <View style={deviceCss.switchRow}>
-                        <Text style={deviceCss.label}>Status L2</Text>
+                    <View style={scenarioCss.switchRow}>
+                        <Text style={scenarioCss.label}>Status L2</Text>
                         <Switch
                             value={switchStatus2}
                             onValueChange={handleChangeSwitchStatus2}
                             style={{ height: 20 }}
+                            disabled={scenarioId != null}
                         />
                     </View>
-                    <View style={deviceCss.separator} />
+                    <View style={scenarioCss.separator} />
 
-                    <TouchableOpacity style={deviceCss.settingRow} onPress={() => {
-                        setModalPowerOnBehavior1(true);
+                    <TouchableOpacity style={scenarioCss.settingRow} onPress={() => {
+                        if (scenarioId == null)
+                            setModalPowerOnBehavior1(true);
                     }}>
-                        <Text style={deviceCss.label}>Power-on behavior L1</Text>
+                        <Text style={scenarioCss.label}>Power-on behavior L1</Text>
                         <Modal
                             // animationType="slide"
                             transparent={true}
                             visible={modalPowerOnBehavior1}
                             onRequestClose={() => setModalPowerOnBehavior1(false)}
                         >
-                            <View style={deviceCss.modalContainer}>
-                                <View style={deviceCss.modalView}>
-                                    <Text style={deviceCss.modalText}>Select Power-on behavior L1</Text>
+                            <View style={scenarioCss.modalContainer}>
+                                <View style={scenarioCss.modalView}>
+                                    <Text style={scenarioCss.modalText}>Select Power-on behavior L1</Text>
                                     <ScrollView contentContainerStyle={{ alignItems: 'center', width: device.width * 0.8 }}>
-                                        <TouchableOpacity style={deviceCss.button} onPress={() => handleOnBehaviorPress1('On')}>
-                                            <Text style={deviceCss.buttonText}>On</Text>
+                                        <TouchableOpacity style={scenarioCss.button} onPress={() => handleOnBehaviorPress1('On')}>
+                                            <Text style={scenarioCss.buttonText}>On</Text>
                                         </TouchableOpacity>
-                                        <TouchableOpacity style={deviceCss.button} onPress={() => handleOnBehaviorPress1('Off')}>
-                                            <Text style={deviceCss.buttonText}>Off</Text>
+                                        <TouchableOpacity style={scenarioCss.button} onPress={() => handleOnBehaviorPress1('Off')}>
+                                            <Text style={scenarioCss.buttonText}>Off</Text>
                                         </TouchableOpacity>
-                                        <TouchableOpacity style={deviceCss.button} onPress={() => handleOnBehaviorPress1('Previous')}>
-                                            <Text style={deviceCss.buttonText}>Previous</Text>
+                                        <TouchableOpacity style={scenarioCss.button} onPress={() => handleOnBehaviorPress1('Previous')}>
+                                            <Text style={scenarioCss.buttonText}>Previous</Text>
                                         </TouchableOpacity>
-                                        <TouchableOpacity style={deviceCss.button} onPress={() => setModalPowerOnBehavior1(false)}>
-                                            <Text style={deviceCss.buttonText}>Cancel</Text>
+                                        <TouchableOpacity style={scenarioCss.button} onPress={() => setModalPowerOnBehavior1(false)}>
+                                            <Text style={scenarioCss.buttonText}>Cancel</Text>
                                         </TouchableOpacity>
                                     </ScrollView>
                                 </View>
                             </View>
                         </Modal>
-                        <Text style={deviceCss.value}>{powerOnBehavior1}</Text>
+                        <Text style={scenarioCss.value}>{powerOnBehavior1}</Text>
                     </TouchableOpacity>
-                    <View style={deviceCss.separator} />
+                    <View style={scenarioCss.separator} />
 
-                    <TouchableOpacity style={deviceCss.settingRow} onPress={() => {
-                        setModalPowerOnBehavior2(true);
+                    <TouchableOpacity style={scenarioCss.settingRow} onPress={() => {
+                        if (scenarioId == null)
+                            setModalPowerOnBehavior2(true);
                     }}>
-                        <Text style={deviceCss.label}>Power-on behavior L2</Text>
+                        <Text style={scenarioCss.label}>Power-on behavior L2</Text>
                         <Modal
                             // animationType="slide"
                             transparent={true}
                             visible={modalPowerOnBehavior2}
                             onRequestClose={() => setModalPowerOnBehavior2(false)}
                         >
-                            <View style={deviceCss.modalContainer}>
-                                <View style={deviceCss.modalView}>
-                                    <Text style={deviceCss.modalText}>Select Power-on behavior L2</Text>
+                            <View style={scenarioCss.modalContainer}>
+                                <View style={scenarioCss.modalView}>
+                                    <Text style={scenarioCss.modalText}>Select Power-on behavior L2</Text>
                                     <ScrollView contentContainerStyle={{ alignItems: 'center', width: device.width * 0.8 }}>
-                                        <TouchableOpacity style={deviceCss.button} onPress={() => handleOnBehaviorPress2('On')}>
-                                            <Text style={deviceCss.buttonText}>On</Text>
+                                        <TouchableOpacity style={scenarioCss.button} onPress={() => handleOnBehaviorPress2('On')}>
+                                            <Text style={scenarioCss.buttonText}>On</Text>
                                         </TouchableOpacity>
-                                        <TouchableOpacity style={deviceCss.button} onPress={() => handleOnBehaviorPress2('Off')}>
-                                            <Text style={deviceCss.buttonText}>Off</Text>
+                                        <TouchableOpacity style={scenarioCss.button} onPress={() => handleOnBehaviorPress2('Off')}>
+                                            <Text style={scenarioCss.buttonText}>Off</Text>
                                         </TouchableOpacity>
-                                        <TouchableOpacity style={deviceCss.button} onPress={() => handleOnBehaviorPress2('Previous')}>
-                                            <Text style={deviceCss.buttonText}>Previous</Text>
+                                        <TouchableOpacity style={scenarioCss.button} onPress={() => handleOnBehaviorPress2('Previous')}>
+                                            <Text style={scenarioCss.buttonText}>Previous</Text>
                                         </TouchableOpacity>
-                                        <TouchableOpacity style={deviceCss.button} onPress={() => setModalPowerOnBehavior2(false)}>
-                                            <Text style={deviceCss.buttonText}>Cancel</Text>
+                                        <TouchableOpacity style={scenarioCss.button} onPress={() => setModalPowerOnBehavior2(false)}>
+                                            <Text style={scenarioCss.buttonText}>Cancel</Text>
                                         </TouchableOpacity>
                                     </ScrollView>
                                 </View>
                             </View>
                         </Modal>
-                        <Text style={deviceCss.value}>{powerOnBehavior2}</Text>
+                        <Text style={scenarioCss.value}>{powerOnBehavior2}</Text>
                     </TouchableOpacity>
-                    <View style={deviceCss.separator} />
+                    <View style={scenarioCss.separator} />
 
-                    <View style={deviceCss.switchRow}>
-                        <Text style={deviceCss.label}>Contdown L1 (s)</Text>
-                        <TextInput
-                            value={countdown1}
-                            onSubmitEditing={handleCountdown1}
-                            onChange={handleChangeCountdown1}
-                            style={{ borderColor: 'gray', borderWidth: 1, paddingHorizontal: 5 }}
-                            keyboardType="numeric"
-                            inputMode="numeric"
-                        />
+                    <View style={scenarioCss.switchRow}>
+                        <Text style={scenarioCss.label}>Contdown L1 (s)</Text>
+                        {scenarioId != null ?
+                            <Text style={scenarioCss.label}>{countdown1}</Text>
+                            :
+                            <TextInput
+                                value={countdown1}
+                                onSubmitEditing={handleCountdown1}
+                                onChange={handleChangeCountdown1}
+                                style={{ borderColor: 'gray', borderWidth: 1, paddingHorizontal: 5 }}
+                                keyboardType="numeric"
+                                inputMode="numeric"
+                            />
+                        }
                     </View>
-                    <View style={deviceCss.separator} />
+                    <View style={scenarioCss.separator} />
 
-                    <View style={deviceCss.switchRow}>
-                        <Text style={deviceCss.label}>Contdown L2 (s)</Text>
-                        <TextInput
-                            value={countdown2}
-                            onSubmitEditing={handleCountdown2}
-                            onChange={handleChangeCountdown2}
-                            style={{ borderColor: 'gray', borderWidth: 1, paddingHorizontal: 5 }}
-                            keyboardType="numeric"
-                            inputMode="numeric"
-                        />
+                    <View style={scenarioCss.switchRow}>
+                        <Text style={scenarioCss.label}>Contdown L2 (s)</Text>
+                        {scenarioId != null ?
+                            <Text style={scenarioCss.label}>{countdown2}</Text>
+                            :
+                            <TextInput
+                                value={countdown2}
+                                onSubmitEditing={handleCountdown2}
+                                onChange={handleChangeCountdown2}
+                                style={{ borderColor: 'gray', borderWidth: 1, paddingHorizontal: 5 }}
+                                keyboardType="numeric"
+                                inputMode="numeric"
+                            />
+                        }
                     </View>
-                    <View style={deviceCss.separator} />
+                    <View style={scenarioCss.separator} />
 
-                    <TouchableOpacity style={deviceCss.switchRow} onPress={showDatePicker1}>
-                        <Text style={deviceCss.label}>Schedule L1</Text>
+                    <TouchableOpacity style={scenarioCss.switchRow} onPress={showDatePicker1}>
+                        <Text style={scenarioCss.label}>Schedule L1</Text>
                         <View style={{ flexDirection: 'row' }}>
-                            <Text style={[deviceCss.label, { marginRight: 5 }]}>{scheduleSwitchStatus1 === 'On' ? 'Bật lúc' : (scheduleSwitchStatus1 === 'Off' ? 'Tắt lúc' : 'No')}</Text>
-                            <Text style={deviceCss.label}>{scheduleSwitchStatus1 === 'On' || scheduleSwitchStatus1 === 'Off' ? date1.toLocaleString() : ''}</Text>
+                            <Text style={[scenarioCss.label, { marginRight: 5 }]}>{scheduleSwitchStatus1 === 'On' ? 'Bật lúc' : (scheduleSwitchStatus1 === 'Off' ? 'Tắt lúc' : 'No')}</Text>
+                            <Text style={scenarioCss.label}>{scheduleSwitchStatus1 === 'On' || scheduleSwitchStatus1 === 'Off' ? date1.toLocaleString() : ''}</Text>
                         </View>
                         {(showDate1 && (
                             <DateTimePicker
@@ -917,15 +897,15 @@ export default function DeviceDetail(props) {
                             visible={showModalScheduleSwitchStatus1}
                             onRequestClose={() => setShowModalScheduleSwitchStatus1(false)}
                         >
-                            <View style={deviceCss.modalContainer}>
-                                <View style={deviceCss.modalView}>
-                                    <Text style={deviceCss.modalText}>Select Power-on behavior</Text>
+                            <View style={scenarioCss.modalContainer}>
+                                <View style={scenarioCss.modalView}>
+                                    <Text style={scenarioCss.modalText}>Select Power-on behavior</Text>
                                     <ScrollView contentContainerStyle={{ alignItems: 'center', width: device.width * 0.8 }}>
-                                        <TouchableOpacity style={deviceCss.button} onPress={() => toggleSwitchStatus1('On')}>
-                                            <Text style={deviceCss.buttonText}>On</Text>
+                                        <TouchableOpacity style={scenarioCss.button} onPress={() => toggleSwitchStatus1('On')}>
+                                            <Text style={scenarioCss.buttonText}>On</Text>
                                         </TouchableOpacity>
-                                        <TouchableOpacity style={deviceCss.button} onPress={() => toggleSwitchStatus1('Off')}>
-                                            <Text style={deviceCss.buttonText}>Off</Text>
+                                        <TouchableOpacity style={scenarioCss.button} onPress={() => toggleSwitchStatus1('Off')}>
+                                            <Text style={scenarioCss.buttonText}>Off</Text>
                                         </TouchableOpacity>
                                     </ScrollView>
                                 </View>
@@ -933,13 +913,13 @@ export default function DeviceDetail(props) {
                         </Modal>
 
                     </TouchableOpacity>
-                    <View style={deviceCss.separator} />
+                    <View style={scenarioCss.separator} />
 
-                    <TouchableOpacity style={deviceCss.switchRow} onPress={showDatePicker2}>
-                        <Text style={deviceCss.label}>Schedule L2</Text>
+                    <TouchableOpacity style={scenarioCss.switchRow} onPress={showDatePicker2}>
+                        <Text style={scenarioCss.label}>Schedule L2</Text>
                         <View style={{ flexDirection: 'row' }}>
-                            <Text style={[deviceCss.label, { marginRight: 5 }]}>{scheduleSwitchStatus2 === 'On' ? 'Bật lúc' : (scheduleSwitchStatus2 === 'Off' ? 'Tắt lúc' : 'No')}</Text>
-                            <Text style={deviceCss.label}>{scheduleSwitchStatus2 === 'On' || scheduleSwitchStatus2 === 'Off' ? date2.toLocaleString() : ''}</Text>
+                            <Text style={[scenarioCss.label, { marginRight: 5 }]}>{scheduleSwitchStatus2 === 'On' ? 'Bật lúc' : (scheduleSwitchStatus2 === 'Off' ? 'Tắt lúc' : 'No')}</Text>
+                            <Text style={scenarioCss.label}>{scheduleSwitchStatus2 === 'On' || scheduleSwitchStatus2 === 'Off' ? date2.toLocaleString() : ''}</Text>
                         </View>
                         {(showDate2 && (
                             <DateTimePicker
@@ -967,56 +947,66 @@ export default function DeviceDetail(props) {
                         visible={showModalScheduleSwitchStatus2}
                         onRequestClose={() => setShowModalScheduleSwitchStatus2(false)}
                     >
-                        <View style={deviceCss.modalContainer}>
-                            <View style={deviceCss.modalView}>
-                                <Text style={deviceCss.modalText}>Select Power-on behavior</Text>
+                        <View style={scenarioCss.modalContainer}>
+                            <View style={scenarioCss.modalView}>
+                                <Text style={scenarioCss.modalText}>Select Power-on behavior</Text>
                                 <ScrollView contentContainerStyle={{ alignItems: 'center', width: device.width * 0.8 }}>
-                                    <TouchableOpacity style={deviceCss.button} onPress={() => toggleSwitchStatus2('On')}>
-                                        <Text style={deviceCss.buttonText}>On</Text>
+                                    <TouchableOpacity style={scenarioCss.button} onPress={() => toggleSwitchStatus2('On')}>
+                                        <Text style={scenarioCss.buttonText}>On</Text>
                                     </TouchableOpacity>
-                                    <TouchableOpacity style={deviceCss.button} onPress={() => toggleSwitchStatus2('Off')}>
-                                        <Text style={deviceCss.buttonText}>Off</Text>
+                                    <TouchableOpacity style={scenarioCss.button} onPress={() => toggleSwitchStatus2('Off')}>
+                                        <Text style={scenarioCss.buttonText}>Off</Text>
                                     </TouchableOpacity>
                                 </ScrollView>
                             </View>
                         </View>
                     </Modal>
-                    <View style={deviceCss.separator} />
+                    <View style={scenarioCss.separator} />
 
-                    <View style={deviceCss.switchRow}>
+                    <View style={scenarioCss.switchRow}>
                         <TouchableOpacity
-                            style={deviceCss.buttonScenario}
-                            onPress={() => navigate('Scenario')}
+                            style={scenarioCss.buttonScenario}
+                            onPress={handleRunOrSaveScenario}
                         >
-                            <Text style={[deviceCss.buttonText, { color: colors.white }]}>Xem kịch bản</Text>
+                            <Text style={[scenarioCss.buttonText, { color: colors.white }]}>{scenarioId == null ? 'Lưu kịch bản' : 'Chạy kịch bản'}</Text>
                         </TouchableOpacity>
                     </View>
-                    <View style={deviceCss.separator} />
+                    <View style={scenarioCss.separator} />
 
-                    {/* <View style={deviceCss.switchRow}>
+                    {/* <View style={scenarioCss.switchRow}>
                         <TouchableOpacity
-                            style={[recordScenario ? deviceCss.buttonScenarioRecord : (isRunScenario ? deviceCss.buttonScenarioDisable : deviceCss.buttonScenario), { marginRight: 8 }]}
+                            style={[recordScenario ? scenarioCss.buttonScenarioRecord : (isRunScenario ? scenarioCss.buttonScenarioDisable : scenarioCss.buttonScenario), { marginRight: 8 }]}
                             onPress={handlePlayOrSetScenario}
                             disabled={isRunScenario}
                         >
-                            <Text style={[deviceCss.buttonText, { color: colors.white }]}>{(scenario.length > 0 && !recordScenario) ? 'Chạy kịch bản' : (scenario.length == 0 && !recordScenario ? 'Ghi lại kịch bản' : ('Dừng ghi'))}</Text>
+                            <Text style={[scenarioCss.buttonText, { color: colors.white }]}>{(scenario.length > 0 && !recordScenario) ? 'Chạy kịch bản' : (scenario.length == 0 && !recordScenario ? 'Ghi lại kịch bản' : ('Dừng ghi'))}</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
-                            style={[(scenario.length > 0 && !recordScenario && !isRunScenario) ? deviceCss.buttonScenario : deviceCss.buttonScenarioDisable, { marginLeft: 8 }]}
+                            style={[(scenario.length > 0 && !recordScenario && !isRunScenario) ? scenarioCss.buttonScenario : scenarioCss.buttonScenarioDisable, { marginLeft: 8 }]}
                             disabled={scenario.length == 0 || isRunScenario}
                             onPress={handleDeleteScenario}
                         >
-                            <Text style={[deviceCss.buttonText, { color: colors.white }]}>Xóa kịch bản</Text>
+                            <Text style={[scenarioCss.buttonText, { color: colors.white }]}>Xóa kịch bản</Text>
                         </TouchableOpacity>
                     </View>
-                    <View style={deviceCss.separator} /> */}
+                    <View style={scenarioCss.separator} /> */}
                 </View>
+
+
+
+
+
+
+
+
+
+
             </ScrollView>
         </SafeAreaView>
     );
 }
 
-const deviceCss = StyleSheet.create({
+const scenarioCss = StyleSheet.create({
     deviceContainer: {
         flexDirection: "row",
         alignItems: "center",

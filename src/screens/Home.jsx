@@ -36,13 +36,48 @@ export default function Home() {
                 if (user !== null) {
                     var parsedUser = JSON.parse(user);
                     setCurrentUser(JSON.parse(user));
-                    const allDevices = await getData('/api/states', parsedUser.token)
-                    setDevices(allDevices);
+                    const allDevices = await getData('/api/states', parsedUser.token);
+                    var existingName = []
+                    var filteredData = []
+                    allDevices.forEach(item => {
+                        if (item.attributes.friendly_name.slice(0, 2) == '0x') {
+                            const name = item.attributes.friendly_name.slice(0, 18);
+                            if (existingName.length === 0) {
+                                console.log("====" + name);
+                                existingName.push(name)
+                                filteredData.push(item);
+                            } else {
+                                let existingGroup = existingName.find(groupName => groupName === name);
+                                if (existingGroup) {
+                                    console.log("====" + name);
+                                    // existingGroup.devices.push(item);
+                                } else {
+                                    console.log("====" + name);
+                                    existingName.push(name)
+                                    filteredData.push(item);
+                                }
+                            }
+                        }
+                    });
+                    // const filteredData = allDevices.reduce((acc, item) => {
+                    //     if (item && item.attributes && item.attributes.friendly_name) {
+                    //         const name = item?.attributes?.friendly_name?.split(' ')[0];
+                    //         const existingGroup = acc.find(group => group[0].attributes.friendly_name === name);
+                    //         if (existingGroup) {
+                    //             existingGroup.push(item);
+                    //         } else {
+                    //             acc.push([item]);
+                    //         }
+                    //         return acc;
+                    //     }
+                    // }, []);
+                    // console.log(filteredData);
+                    setDevices(filteredData);
                 } else {
                     replace('Login');
                 }
             } catch (error) {
-                console.error('Failed to load current user:', error);
+                console.error(error);
             } finally {
                 setIsLoading(false);
             }
@@ -61,12 +96,12 @@ export default function Home() {
     return (
         <SafeAreaView style={[styles.customSafeArea]}>
             <ScrollView style={styles.container}>
-                <Text style={styles.h1}>Tất cả thiết bị</Text>
+                <Text style={styles.headerText}>Tất cả thiết bị</Text>
                 <View style={homeCss.container}>
                     {devices.map((item, index) => {
                         return (
-                            <TouchableOpacity style={homeCss.item} key={index} onPress={() => handleDetail(item.entity_id)}>
-                                <Text style={homeCss.itemTitle}>{item.attributes.friendly_name}</Text>
+                            <TouchableOpacity style={homeCss.item} key={index} onPress={() => handleDetail(item.attributes.friendly_name.slice(0, 18))}>
+                                <Text style={homeCss.itemTitle}>{item.attributes.friendly_name.slice(0, 18)}</Text>
                                 <View style={homeCss.itemIcon}>
                                 </View>
                             </TouchableOpacity>

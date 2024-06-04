@@ -7,6 +7,9 @@ const useStore = create(set => ({
   
   entityId: null,
   setEntityId: id => set({ entityId: id }),
+
+  scenarioId: null,
+  setScenarioId: id => set({ scenarioId: id }),
 }));
 
 export default useStore;
