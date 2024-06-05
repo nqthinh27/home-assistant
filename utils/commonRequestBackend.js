@@ -1,6 +1,6 @@
 // Hàm gọi API sử dụng phương thức GET
 
-const BASE_URL_BACKEND = 'http://192.168.0.4:8080'
+const BASE_URL_BACKEND = 'http://192.168.0.3:8080'
 
 export async function getDataBackend(url, accessToken) {
     try {
@@ -14,6 +14,23 @@ export async function getDataBackend(url, accessToken) {
         }
         const data = await response.json();
         return data;
+    } catch (error) {
+        console.error('Lỗi khi gọi API:', error);
+        return null;
+    }
+}
+
+export async function deleteDataBackend(url, accessToken) {
+    try {
+        const response = await fetch(BASE_URL_BACKEND + url, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `${accessToken}`
+            }
+        });
+        if (!response.ok) {
+            throw new Error('Không thể xóa dữ liệu từ API');
+        }
     } catch (error) {
         console.error('Lỗi khi gọi API:', error);
         return null;

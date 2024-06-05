@@ -265,6 +265,9 @@ export default function DeviceDetail(props) {
     const fetchStatus1 = async (token) => {
         try {
             let device = await getData(`/api/states/${switchKey.get('state1_begin') + entityId + switchKey.get('state1_end')}`, token)
+            if (device.state != 'on' && device.state != 'off' && switchStatus1 == 'on' && switchStatus1 == 'off') {
+                alert("Thiết bị đã bị ngắt kết nối")
+            }
             setSwitchStatus1(device.state === 'on' ? true : false)
         } catch (error) {
             console.error('Failed to load device:', error);
@@ -273,6 +276,9 @@ export default function DeviceDetail(props) {
     const fetchStatus2 = async (token) => {
         try {
             let device = await getData(`/api/states/${switchKey.get('state2_begin') + entityId + switchKey.get('state2_end')}`, token)
+            if (device.state != 'on' && device.state != 'off' && switchStatus2 == 'on' && switchStatus2 == 'off') {
+                alert("Thiết bị đã bị ngắt kết nối")
+            }
             setSwitchStatus2(device.state === 'on' ? true : false)
         } catch (error) {
             console.error('Failed to load device:', error);
@@ -584,14 +590,14 @@ export default function DeviceDetail(props) {
     return (
         <SafeAreaView style={[styles.customSafeArea, { backgroundColor: colors.white }]}>
             <ScrollView style={styles.container}>
-                <View style={[styles.flexRow, {marginBottom: -8}]}>
+                <View style={[styles.flexRow, { marginBottom: -8 }]}>
                     <Entypo
                         name="chevron-left"
                         size={24}
-                        color={colors.black} 
-                        onPress={() => goBack()}/>
+                        color={colors.black}
+                        onPress={() => goBack()} />
                     <Text style={styles.headerText}>Bảng điều khiển</Text>
-                    <View style={{width: 24}}></View>
+                    <View style={{ width: 24 }}></View>
                 </View>
                 <View style={deviceCss.container}>
                     <TouchableOpacity style={deviceCss.settingRow} onPress={() => {
@@ -983,7 +989,7 @@ export default function DeviceDetail(props) {
                     </Modal>
                     <View style={deviceCss.separator} />
 
-                    <View style={deviceCss.switchRow}>
+                    {/* <View style={deviceCss.switchRow}>
                         <TouchableOpacity
                             style={deviceCss.buttonScenario}
                             onPress={() => navigate('Scenario')}
@@ -991,7 +997,7 @@ export default function DeviceDetail(props) {
                             <Text style={[deviceCss.buttonText, { color: colors.white }]}>Xem kịch bản</Text>
                         </TouchableOpacity>
                     </View>
-                    <View style={deviceCss.separator} />
+                    <View style={deviceCss.separator} /> */}
 
                     {/* <View style={deviceCss.switchRow}>
                         <TouchableOpacity

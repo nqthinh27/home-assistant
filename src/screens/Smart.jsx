@@ -14,15 +14,15 @@ import { styles } from "../components/GlobalStyles";
 import colors from "../constants/colors";
 import { useNavigation } from "@react-navigation/native";
 import useStore from "../../utils/store";
-import { getDataBackend } from "../../utils/commonRequestBackend";
+import { deleteDataBackend, getDataBackend } from "../../utils/commonRequestBackend";
 import { device } from "../../utils/device";
-import { getData } from "../../utils/commonRequest";
+import { getData, postData } from "../../utils/commonRequest";
 
 export default function Smart() {
     const navigation = useNavigation();
     const { navigate, goBack } = navigation;
     const [allScenarios, setAllScenarios] = useState([]);
-    const { currentUser, setCurrentUser, removeCurrentUser, entityId, setEntityId, scenarioId, setScenarioId } = useStore();
+    const { currentUser, setCurrentUser, removeCurrentUser, entityId, setEntityId, scenarioId, setScenarioId, toggleSmartPage, setToggleSmartPage } = useStore();
     const fetchAllScenarios = async () => {
         const dataRes = await getDataBackend('/api/scenarios', currentUser.tokenBackend);
         const filteredScenarios = dataRes.filter((element) => {
@@ -33,9 +33,39 @@ export default function Smart() {
     }
     useEffect(() => {
         fetchAllScenarios();
-    }, [currentUser])
+    }, [currentUser, toggleSmartPage])
     const [showModal, setShowModal] = useState(false);
     const [devices, setDevices] = useState([]);
+    const [showRunModal, setShowRunModal] = useState(false);
+    const handleRunScenario = async () => {
+        try {
+            setShowRunModal(false)
+            const dataRes = await getDataBackend(`/api/scenarios/${scenarioId}`, currentUser.tokenBackend);
+            const newScenarios = dataRes.action.map(element => JSON.parse(element.payload));
+            let delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+            for (let value of newScenarios) {
+                if (value.body.entity_id.includes('switch')) {
+                    const result = await postData(value.url, value.body, currentUser.token);
+                    await delay(500); // Dừng lại 1 giây
+                }
+            }
+            alert('Chạy kịch bản thành công!')
+        } catch (e) {
+            console.error(e);
+            alert("Chạy kịch bản thất bại")
+        }
+    }
+    const handleDeleteScenario = async () => {
+        try {
+            setShowRunModal(false)
+            await deleteDataBackend(`/api/scenarios/${scenarioId}`, currentUser.tokenBackend);
+            alert('Xóa bản thành công!')
+            setToggleSmartPage()
+        } catch (e) {
+            console.error(e);
+            alert("Xóa bản thất bại")
+        }
+    }
     return (
         <SafeAreaView style={[styles.customSafeArea]}>
             <ScrollView style={styles.container}>
@@ -44,11 +74,14 @@ export default function Smart() {
                     return (
                         <TouchableOpacity style={smartCss.item} key={index}
                             onPress={() => {
+                                // handleRunScenario(item.id)
                                 setScenarioId(item.id);
-                                navigate('Scenario');
+                                setShowRunModal(true)
+                                // navigate('Scenario');
                             }}
                         >
                             <Text style={smartCss.itemTitle}>{item.name}</Text>
+                            <Text style={smartCss.itemTitle}>Thiết bị: {item.entityId}</Text>
                             {/* <View style={smartCss.itemIcon}>
                                 </View> */}
                         </TouchableOpacity>
@@ -110,6 +143,32 @@ export default function Smart() {
                                             </TouchableOpacity>
                                         )
                                     })}
+                                    <TouchableOpacity style={smartCss.modalButton} onPress={() => setShowModal(false)}>
+                                        <Text style={smartCss.modalButtonText}>Cancel</Text>
+                                    </TouchableOpacity>
+                                </ScrollView>
+                            </View>
+                        </View>
+                    </Modal>
+
+                    <Modal
+                        transparent={true}
+                        visible={showRunModal}
+                        onRequestClose={() => setShowRunModal(false)}
+                    >
+                        <View style={smartCss.modalContainer}>
+                            <View style={smartCss.modalView}>
+                                <Text style={smartCss.modalText}>Chọn thiết bị</Text>
+                                <ScrollView contentContainerStyle={{ alignItems: 'center', width: device.width * 0.8 }}>
+                                    <TouchableOpacity style={smartCss.modalButton} onPress={() => handleRunScenario()}>
+                                        <Text style={smartCss.modalButtonText}>Chạy kịch bản</Text>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity style={smartCss.modalButton} onPress={() => handleDeleteScenario()}>
+                                        <Text style={smartCss.modalButtonText}>Xóa kịch bản</Text>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity style={smartCss.modalButton} onPress={() => setShowRunModal(false)}>
+                                        <Text style={smartCss.modalButtonText}>Đóng</Text>
+                                    </TouchableOpacity>
                                 </ScrollView>
                             </View>
                         </View>

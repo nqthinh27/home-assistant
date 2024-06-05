@@ -26,8 +26,8 @@ export default function Setting() {
     const { removeCurrentUser } = useStore();
     const handleLogout = async () => {
         await AsyncStorage.removeItem(userKey);
-        removeCurrentUser();
         navigation.replace('Login');
+        removeCurrentUser();
     }
     return (
         <SafeAreaView style={[styles.customSafeArea]}>

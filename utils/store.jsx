@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-const useStore = create(set => ({
+const useStore = create((set, get) => ({
   currentUser: null,
   setCurrentUser: user => set({ currentUser: user }),
   removeCurrentUser: () => set({ currentUser: null }),
@@ -10,6 +10,9 @@ const useStore = create(set => ({
 
   scenarioId: null,
   setScenarioId: id => set({ scenarioId: id }),
+
+  toggleSmartPage: true,
+  setToggleSmartPage: () => set({ toggleSmartPage: !get().toggleSmartPage }),
 }));
 
 export default useStore;

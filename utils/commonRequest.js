@@ -38,6 +38,7 @@ export async function postData(url, body, accessToken) {
         return data;
     } catch (error) {
         console.error('Lỗi khi gọi API:', error);
+        console.log(url);
         return null;
     }
 }

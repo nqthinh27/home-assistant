@@ -21,7 +21,7 @@ import useStore from "../../utils/store";
 import { device } from "../../utils/device";
 import { oneHundredElement, switchKey, userKey } from "../constants/common";
 import { switchColor } from "../constants/switchColor";
-import { getData } from "../../utils/commonRequest";
+import { getData, postData } from "../../utils/commonRequest";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import DateTimePicker from '@react-native-community/datetimepicker';
 
@@ -30,25 +30,31 @@ export default function Scenario() {
     const { navigate, goBack } = navigation;
     // Chi tiết kịch bản hiện tại
     const [scenarios, setScenarios] = useState([]);
-    const { currentUser, setCurrentUser, removeCurrentUser, entityId, setEntityId, scenarioId, setScenarioId } = useStore();
+    const { currentUser, setCurrentUser, removeCurrentUser, entityId, setEntityId, scenarioId, setScenarioId, toggleSmartPage, setToggleSmartPage } = useStore();
     const fetchScenariosIfRunMode = async () => {
-        const dataRes = await getDataBackend(`/api/scenarios/${scenarioId}`, currentUser.tokenBackend);
-        setScenarios(dataRes);
-        dataRes.action.forEach(element => {
-            setScenario([...scenario, JSON.parse(element.payload)])
-        });
-    }
+        try {
+            const dataRes = await getDataBackend(`/api/scenarios/${scenarioId}`, currentUser.tokenBackend);
+            const newScenarios = dataRes.action.map(element => JSON.parse(element.payload));
+            setScenarios([...scenarios, ...newScenarios]);
+        } catch (error) {
+            console.error('Lỗi khi fetch scenarios:', error);
+        }
+    };
     useEffect(() => {
         if (scenarioId != null) {
             fetchScenariosIfRunMode();
         }
-    }, [])
+    }, [scenarioId])
 
     const [scenario, setScenario] = useState([]);
     const runScenario = async () => {
         try {
-            for (let value of scenario) {
-                const result = await postData(value.url, value.body, currentUser.token);
+            let delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+            for (let value of scenarios) {
+                if (value.body.entity_id.includes('switch')) {
+                    const result = await postData(value.url, value.body, currentUser.token);
+                    await delay(1000); // Dừng lại 1 giây
+                }
             }
             alert('Chạy kịch bản thành công!')
         } catch (e) {
@@ -62,12 +68,12 @@ export default function Scenario() {
         if (scenarioId == null) {
             setPowerOnBehavior(value);
             setModalPowerOnBehavior(false);
-            if (recordScenario) {
-                setScenario([...scenario, {
-                    url: `/api/services/select/select_option`,
-                    body: { entity_id: switchKey.get('powerOnBehavior_begin') + entityId + switchKey.get('powerOnBehavior_end'), option: value.toLowerCase() },
-                }])
-            }
+            // if (recordScenario) {
+            //     setScenario([...scenario, {
+            //         url: `/api/services/select/select_option`,
+            //         body: { entity_id: switchKey.get('powerOnBehavior_begin') + entityId + switchKey.get('powerOnBehavior_end'), option: value.toLowerCase() },
+            //     }])
+            // }
         } else {
             // const result = await postData(`/api/services/select/select_option`, { entity_id: switchKey.get('powerOnBehavior_begin') + entityId + switchKey.get('powerOnBehavior_end'), option: value.toLowerCase() }, nowUser.token);
         }
@@ -75,52 +81,52 @@ export default function Scenario() {
     const [powerOnBehavior1, setPowerOnBehavior1] = useState('On');
     const [modalPowerOnBehavior1, setModalPowerOnBehavior1] = useState(false);
     const handleOnBehaviorPress1 = async (value) => {
-        const result = await postData(`/api/services/select/select_option`, { entity_id: switchKey.get('powerOnBehavior1_begin') + entityId + switchKey.get('powerOnBehavior1_end'), option: value.toLowerCase() }, nowUser.token);
+        // const result = await postData(`/api/services/select/select_option`, { entity_id: switchKey.get('powerOnBehavior1_begin') + entityId + switchKey.get('powerOnBehavior1_end'), option: value.toLowerCase() }, nowUser.token);
         setPowerOnBehavior1(value);
         setModalPowerOnBehavior1(false);
-        if (recordScenario) {
-            setScenario([...scenario, {
-                url: `/api/services/select/select_option`,
-                body: { entity_id: switchKey.get('powerOnBehavior1_begin') + entityId + switchKey.get('powerOnBehavior1_end'), option: value.toLowerCase() },
-                accessToken: nowUser.token
-            }])
-        }
+        // if (recordScenario) {
+        //     setScenario([...scenario, {
+        //         url: `/api/services/select/select_option`,
+        //         body: { entity_id: switchKey.get('powerOnBehavior1_begin') + entityId + switchKey.get('powerOnBehavior1_end'), option: value.toLowerCase() },
+        //         accessToken: nowUser.token
+        //     }])
+        // }
     };
     const [powerOnBehavior2, setPowerOnBehavior2] = useState('On');
     const [modalPowerOnBehavior2, setModalPowerOnBehavior2] = useState(false);
     const handleOnBehaviorPress2 = async (value) => {
-        const result = await postData(`/api/services/select/select_option`, { entity_id: switchKey.get('powerOnBehavior2_begin') + entityId + switchKey.get('powerOnBehavior2_end'), option: value.toLowerCase() }, nowUser.token);
+        // const result = await postData(`/api/services/select/select_option`, { entity_id: switchKey.get('powerOnBehavior2_begin') + entityId + switchKey.get('powerOnBehavior2_end'), option: value.toLowerCase() }, nowUser.token);
         setPowerOnBehavior2(value);
         setModalPowerOnBehavior2(false);
-        if (recordScenario) {
-            setScenario([...scenario, {
-                url: `/api/services/select/select_option`,
-                body: { entity_id: switchKey.get('powerOnBehavior2_begin') + entityId + switchKey.get('powerOnBehavior2_end'), option: value.toLowerCase() },
-                accessToken: nowUser.token
-            }])
-        }
+        // if (recordScenario) {
+        //     setScenario([...scenario, {
+        //         url: `/api/services/select/select_option`,
+        //         body: { entity_id: switchKey.get('powerOnBehavior2_begin') + entityId + switchKey.get('powerOnBehavior2_end'), option: value.toLowerCase() },
+        //         accessToken: nowUser.token
+        //     }])
+        // }
     };
 
     const [switchStatus1, setSwitchStatus1] = useState(true);
     const handleChangeSwitchStatus1 = async () => {
         if (switchStatus1) {
-            const result = await postData(`/api/services/switch/turn_off`, { entity_id: switchKey.get('state1_begin') + entityId + switchKey.get('state1_end') }, nowUser.token);
-            if (recordScenario) {
-                setScenario([...scenario, {
-                    url: `/api/services/switch/turn_off`,
-                    body: { entity_id: switchKey.get('state1_begin') + entityId + switchKey.get('state1_end') },
-                    accessToken: nowUser.token
-                }])
-            }
+            // const result = await postData(`/api/services/switch/turn_off`, { entity_id: switchKey.get('state1_begin') + entityId + switchKey.get('state1_end') }, nowUser.token);
+            // if (recordScenario) {
+            //     setScenario([...scenario, {
+            //         url: `/api/services/switch/turn_off`,
+            //         body: { entity_id: switchKey.get('state1_begin') + entityId + switchKey.get('state1_end') },
+            //         accessToken: nowUser.token
+            //     }])
+            // }
         } else {
-            const result = await postData(`/api/services/switch/turn_on`, { entity_id: switchKey.get('state1_begin') + entityId + switchKey.get('state1_end') }, nowUser.token);
-            if (recordScenario) {
-                setScenario([...scenario, {
-                    url: `/api/services/switch/turn_on`,
-                    body: { entity_id: switchKey.get('state1_begin') + entityId + switchKey.get('state1_end') },
-                    accessToken: nowUser.token
-                }])
-            }
+            // const result = await postData(`/api/services/switch/turn_on`, { entity_id: switchKey.get('state1_begin') + entityId + switchKey.get('state1_end') }, nowUser.token);
+            // if (recordScenario) {
+            //     setScenario([...scenario, {
+            //         url: `/api/services/switch/turn_on`,
+            //         body: { entity_id: switchKey.get('state1_begin') + entityId + switchKey.get('state1_end') },
+            //         accessToken: nowUser.token
+            //     }])
+            // }
         }
         setSwitchStatus1(!switchStatus1);
     }
@@ -128,23 +134,23 @@ export default function Scenario() {
     const [switchStatus2, setSwitchStatus2] = useState(true);
     const handleChangeSwitchStatus2 = async () => {
         if (switchStatus2) {
-            const result = await postData(`/api/services/switch/turn_off`, { entity_id: switchKey.get('state2_begin') + entityId + switchKey.get('state2_end') }, nowUser.token);
-            if (recordScenario) {
-                setScenario([...scenario, {
-                    url: `/api/services/switch/turn_off`,
-                    body: { entity_id: switchKey.get('state2_begin') + entityId + switchKey.get('state2_end') },
-                    accessToken: nowUser.token
-                }])
-            }
+            // const result = await postData(`/api/services/switch/turn_off`, { entity_id: switchKey.get('state2_begin') + entityId + switchKey.get('state2_end') }, nowUser.token);
+            // if (recordScenario) {
+            //     setScenario([...scenario, {
+            //         url: `/api/services/switch/turn_off`,
+            //         body: { entity_id: switchKey.get('state2_begin') + entityId + switchKey.get('state2_end') },
+            //         accessToken: nowUser.token
+            //     }])
+            // }
         } else {
-            const result = await postData(`/api/services/switch/turn_on`, { entity_id: switchKey.get('state2_begin') + entityId + switchKey.get('state2_end') }, nowUser.token);
-            if (recordScenario) {
-                setScenario([...scenario, {
-                    url: `/api/services/switch/turn_on`,
-                    body: { entity_id: switchKey.get('state2_begin') + entityId + switchKey.get('state2_end') },
-                    accessToken: nowUser.token
-                }])
-            }
+            // const result = await postData(`/api/services/switch/turn_on`, { entity_id: switchKey.get('state2_begin') + entityId + switchKey.get('state2_end') }, nowUser.token);
+            // if (recordScenario) {
+            //     setScenario([...scenario, {
+            //         url: `/api/services/switch/turn_on`,
+            //         body: { entity_id: switchKey.get('state2_begin') + entityId + switchKey.get('state2_end') },
+            //         accessToken: nowUser.token
+            //     }])
+            // }
         }
         setSwitchStatus2(!switchStatus2);
     }
@@ -152,46 +158,46 @@ export default function Scenario() {
     const [indicatorMode, setIndicatorMode] = useState('None');
     const [modalIndicatorMode, setModalIndicatorMode] = useState(false);
     const handleIndicatorModePress = async (value) => {
-        const result = await postData(`/api/services/select/select_option`, { entity_id: switchKey.get('indicatorMode_begin') + entityId + switchKey.get('indicatorMode_end'), option: value.toLowerCase() }, nowUser.token);
+        // const result = await postData(`/api/services/select/select_option`, { entity_id: switchKey.get('indicatorMode_begin') + entityId + switchKey.get('indicatorMode_end'), option: value.toLowerCase() }, nowUser.token);
         setIndicatorMode(value);
         setModalIndicatorMode(false);
-        if (recordScenario) {
-            setScenario([...scenario, {
-                url: `/api/services/select/select_option`,
-                body: { entity_id: switchKey.get('indicatorMode_begin') + entityId + switchKey.get('indicatorMode_end'), option: value.toLowerCase() },
-                accessToken: nowUser.token
-            }])
-        }
+        // if (recordScenario) {
+        //     setScenario([...scenario, {
+        //         url: `/api/services/select/select_option`,
+        //         body: { entity_id: switchKey.get('indicatorMode_begin') + entityId + switchKey.get('indicatorMode_end'), option: value.toLowerCase() },
+        //         accessToken: nowUser.token
+        //     }])
+        // }
     };
 
     const [brightness, setBrightness] = useState(0);
     const [modalBrightness, setModalBrightness] = useState(false);
     const handleBrightnessPress = async (value) => {
-        const result = await postData(`/api/services/number/set_value`, { entity_id: switchKey.get('brightness_begin') + entityId + switchKey.get('brightness_end'), value: value }, nowUser.token);
+        // const result = await postData(`/api/services/number/set_value`, { entity_id: switchKey.get('brightness_begin') + entityId + switchKey.get('brightness_end'), value: value }, nowUser.token);
         setBrightness(value);
         setModalBrightness(false);
-        if (recordScenario) {
-            setScenario([...scenario, {
-                url: `/api/services/number/set_value`,
-                body: { entity_id: switchKey.get('brightness_begin') + entityId + switchKey.get('brightness_end'), value: value },
-                accessToken: nowUser.token
-            }])
-        }
+        // if (recordScenario) {
+        //     setScenario([...scenario, {
+        //         url: `/api/services/number/set_value`,
+        //         body: { entity_id: switchKey.get('brightness_begin') + entityId + switchKey.get('brightness_end'), value: value },
+        //         accessToken: nowUser.token
+        //     }])
+        // }
     };
 
     const [onColor, setOnColor] = useState("");
     const [modalOnColor, setModalOnColor] = useState(false);
     const handleOnColorPress = async (value) => {
-        const result = await postData(`/api/services/select/select_option`, { entity_id: switchKey.get('onColor_begin') + entityId + switchKey.get('onColor_end'), option: value }, nowUser.token);
+        // const result = await postData(`/api/services/select/select_option`, { entity_id: switchKey.get('onColor_begin') + entityId + switchKey.get('onColor_end'), option: value }, nowUser.token);
         setOnColor(value);
         setModalOnColor(false);
-        if (recordScenario) {
-            setScenario([...scenario, {
-                url: `/api/services/select/select_option`,
-                body: { entity_id: switchKey.get('onColor_begin') + entityId + switchKey.get('onColor_end'), option: value },
-                accessToken: nowUser.token
-            }])
-        }
+        // if (recordScenario) {
+        //     setScenario([...scenario, {
+        //         url: `/api/services/select/select_option`,
+        //         body: { entity_id: switchKey.get('onColor_begin') + entityId + switchKey.get('onColor_end'), option: value },
+        //         accessToken: nowUser.token
+        //     }])
+        // }
     };
 
     const [offColor, setOffColor] = useState("");
@@ -200,35 +206,35 @@ export default function Scenario() {
         const result = await postData(`/api/services/select/select_option`, { entity_id: switchKey.get('offColor_begin') + entityId + switchKey.get('offColor_end'), option: value }, nowUser.token);
         setOffColor(value);
         setModalOffColor(false);
-        if (recordScenario) {
-            setScenario([...scenario, {
-                url: `/api/services/select/select_option`,
-                body: { entity_id: switchKey.get('offColor_begin') + entityId + switchKey.get('offColor_end'), option: value },
-                accessToken: nowUser.token
-            }])
-        }
+        // if (recordScenario) {
+        //     setScenario([...scenario, {
+        //         url: `/api/services/select/select_option`,
+        //         body: { entity_id: switchKey.get('offColor_begin') + entityId + switchKey.get('offColor_end'), option: value },
+        //         accessToken: nowUser.token
+        //     }])
+        // }
     };
 
     const [childLock, setChildLock] = useState(false);
     const handleChildLock = async () => {
         if (!childLock) {
-            const result = await postData(`/api/services/lock/lock`, { entity_id: switchKey.get('childLock_begin') + entityId + switchKey.get('childLock_end') }, nowUser.token);
-            if (recordScenario) {
-                setScenario([...scenario, {
-                    url: `/api/services/lock/lock`,
-                    body: { entity_id: switchKey.get('childLock_begin') + entityId + switchKey.get('childLock_end') },
-                    accessToken: nowUser.token
-                }])
-            }
+            // const result = await postData(`/api/services/lock/lock`, { entity_id: switchKey.get('childLock_begin') + entityId + switchKey.get('childLock_end') }, nowUser.token);
+            // if (recordScenario) {
+            //     setScenario([...scenario, {
+            //         url: `/api/services/lock/lock`,
+            //         body: { entity_id: switchKey.get('childLock_begin') + entityId + switchKey.get('childLock_end') },
+            //         accessToken: nowUser.token
+            //     }])
+            // }
         } else {
-            const result = await postData(`/api/services/lock/unlock`, { entity_id: switchKey.get('childLock_begin') + entityId + switchKey.get('childLock_end') }, nowUser.token);
-            if (recordScenario) {
-                setScenario([...scenario, {
-                    url: `/api/services/lock/unlock`,
-                    body: { entity_id: switchKey.get('childLock_begin') + entityId + switchKey.get('childLock_end') },
-                    accessToken: nowUser.token
-                }])
-            }
+            // const result = await postData(`/api/services/lock/unlock`, { entity_id: switchKey.get('childLock_begin') + entityId + switchKey.get('childLock_end') }, nowUser.token);
+            // if (recordScenario) {
+            //     setScenario([...scenario, {
+            //         url: `/api/services/lock/unlock`,
+            //         body: { entity_id: switchKey.get('childLock_begin') + entityId + switchKey.get('childLock_end') },
+            //         accessToken: nowUser.token
+            //     }])
+            // }
         }
         setChildLock(!childLock);
     }
@@ -236,37 +242,37 @@ export default function Scenario() {
     const [backlightMode, setBacklightMode] = useState(false);
     const handleBlacklightMode = async () => {
         if (backlightMode) {
-            const result = await postData(`/api/services/switch/turn_off`, { entity_id: switchKey.get('blackLight_begin') + entityId + switchKey.get('blackLight_end') }, nowUser.token);
-            if (recordScenario) {
-                setScenario([...scenario, {
-                    url: `/api/services/switch/turn_off`,
-                    body: { entity_id: switchKey.get('blackLight_begin') + entityId + switchKey.get('blackLight_end') },
-                    accessToken: nowUser.token
-                }])
-            }
+            // const result = await postData(`/api/services/switch/turn_off`, { entity_id: switchKey.get('blackLight_begin') + entityId + switchKey.get('blackLight_end') }, nowUser.token);
+            // if (recordScenario) {
+            //     setScenario([...scenario, {
+            //         url: `/api/services/switch/turn_off`,
+            //         body: { entity_id: switchKey.get('blackLight_begin') + entityId + switchKey.get('blackLight_end') },
+            //         accessToken: nowUser.token
+            //     }])
+            // }
         } else {
-            const result = await postData(`/api/services/switch/turn_on`, { entity_id: switchKey.get('blackLight_begin') + entityId + switchKey.get('blackLight_end') }, nowUser.token);
-            if (recordScenario) {
-                setScenario([...scenario, {
-                    url: `/api/services/switch/turn_on`,
-                    body: { entity_id: switchKey.get('blackLight_begin') + entityId + switchKey.get('blackLight_end') },
-                    accessToken: nowUser.token
-                }])
-            }
+            // const result = await postData(`/api/services/switch/turn_on`, { entity_id: switchKey.get('blackLight_begin') + entityId + switchKey.get('blackLight_end') }, nowUser.token);
+            // if (recordScenario) {
+            //     setScenario([...scenario, {
+            //         url: `/api/services/switch/turn_on`,
+            //         body: { entity_id: switchKey.get('blackLight_begin') + entityId + switchKey.get('blackLight_end') },
+            //         accessToken: nowUser.token
+            //     }])
+            // }
         }
         setBacklightMode(!backlightMode);
     }
 
     const [countdown1, setCountdown1] = useState(0);
     const handleCountdown1 = async (value) => {
-        const result = await postData(`/api/services/number/set_value`, { entity_id: switchKey.get('countdown1_begin') + entityId + switchKey.get('countdown1_end'), value: parseInt(value.nativeEvent.text.trim()) }, nowUser.token);
-        if (recordScenario) {
-            setScenario([...scenario, {
-                url: `/api/services/number/set_value`,
-                body: { entity_id: switchKey.get('countdown1_begin') + entityId + switchKey.get('countdown1_end'), value: parseInt(value.nativeEvent.text.trim()) },
-                accessToken: nowUser.token
-            }])
-        }
+        // const result = await postData(`/api/services/number/set_value`, { entity_id: switchKey.get('countdown1_begin') + entityId + switchKey.get('countdown1_end'), value: parseInt(value.nativeEvent.text.trim()) }, nowUser.token);
+        // if (recordScenario) {
+        //     setScenario([...scenario, {
+        //         url: `/api/services/number/set_value`,
+        //         body: { entity_id: switchKey.get('countdown1_begin') + entityId + switchKey.get('countdown1_end'), value: parseInt(value.nativeEvent.text.trim()) },
+        //         accessToken: nowUser.token
+        //     }])
+        // }
     }
 
     const handleChangeCountdown1 = async (value) => {
@@ -274,14 +280,14 @@ export default function Scenario() {
     }
     const [countdown2, setCountdown2] = useState(0);
     const handleCountdown2 = async (value) => {
-        const result = await postData(`/api/services/number/set_value`, { entity_id: switchKey.get('countdown2_begin') + entityId + switchKey.get('countdown2_end'), value: parseInt(value.nativeEvent.text.trim()) }, nowUser.token);
-        if (recordScenario) {
-            setScenario([...scenario, {
-                url: `/api/services/number/set_value`,
-                body: { entity_id: switchKey.get('countdown2_begin') + entityId + switchKey.get('countdown2_end'), value: parseInt(value.nativeEvent.text.trim()) },
-                accessToken: nowUser.token
-            }])
-        }
+        // const result = await postData(`/api/services/number/set_value`, { entity_id: switchKey.get('countdown2_begin') + entityId + switchKey.get('countdown2_end'), value: parseInt(value.nativeEvent.text.trim()) }, nowUser.token);
+        // if (recordScenario) {
+        //     setScenario([...scenario, {
+        //         url: `/api/services/number/set_value`,
+        //         body: { entity_id: switchKey.get('countdown2_begin') + entityId + switchKey.get('countdown2_end'), value: parseInt(value.nativeEvent.text.trim()) },
+        //         accessToken: nowUser.token
+        //     }])
+        // }
     }
     const handleChangeCountdown2 = async (value) => {
         setCountdown2(parseInt(value.nativeEvent.text.trim()));
@@ -330,9 +336,9 @@ export default function Scenario() {
             setTimeout(async () => {
                 console.log("Hết thời gian hẹn giờ L1");
                 if (status == 'On') {
-                    const result = await postData(`/api/services/switch/turn_on`, { entity_id: switchKey.get('state1_begin') + entityId + switchKey.get('state1_end') }, nowUser.token);
+                    // const result = await postData(`/api/services/switch/turn_on`, { entity_id: switchKey.get('state1_begin') + entityId + switchKey.get('state1_end') }, nowUser.token);
                 } else if (status == 'Off') {
-                    const result = await postData(`/api/services/switch/turn_off`, { entity_id: switchKey.get('state1_begin') + entityId + switchKey.get('state1_end') }, nowUser.token);
+                    // const result = await postData(`/api/services/switch/turn_off`, { entity_id: switchKey.get('state1_begin') + entityId + switchKey.get('state1_end') }, nowUser.token);
                 }
             }, msUntilTimeout);
         } else {
@@ -386,9 +392,9 @@ export default function Scenario() {
             setTimeout(async () => {
                 console.log("Hết thời gian hẹn giờ L2");
                 if (status == 'On') {
-                    const result = await postData(`/api/services/switch/turn_on`, { entity_id: switchKey.get('state2_begin') + entityId + switchKey.get('state2_end') }, nowUser.token);
+                    // const result = await postData(`/api/services/switch/turn_on`, { entity_id: switchKey.get('state2_begin') + entityId + switchKey.get('state2_end') }, nowUser.token);
                 } else if (status == 'Off') {
-                    const result = await postData(`/api/services/switch/turn_off`, { entity_id: switchKey.get('state2_begin') + entityId + switchKey.get('state2_end') }, nowUser.token);
+                    // const result = await postData(`/api/services/switch/turn_off`, { entity_id: switchKey.get('state2_begin') + entityId + switchKey.get('state2_end') }, nowUser.token);
                 }
             }, msUntilTimeout);
         } else {
@@ -533,10 +539,90 @@ export default function Scenario() {
         return string.charAt(0).toUpperCase() + string.slice(1)
     }
 
+    const [scenarioName, setScenarioName] = useState('');
+
+    const handleScenarioName = (value) => {
+        setScenarioName(value);
+    }
+
     const handleRunOrSaveScenario = async () => {
         // Luư kịch bản
         if (scenarioId == null) {
-
+            if (scenarioName == null || scenarioName == '') {
+                alert('Vui lòng nhập tên kịch bản!')
+            } else {
+                var newScenario = [];
+                newScenario.push({
+                    url: `/api/services/select/select_option`,
+                    body: { entity_id: switchKey.get('powerOnBehavior_begin') + entityId + switchKey.get('powerOnBehavior_end'), option: powerOnBehavior },
+                })
+                newScenario.push({
+                    url: `/api/services/select/select_option`,
+                    body: { entity_id: switchKey.get('indicatorMode_begin') + entityId + switchKey.get('indicatorMode_end'), option: indicatorMode },
+                })
+                newScenario.push({
+                    url: `/api/services/switch/turn_${(backlightMode) ? 'on': 'off'}`,
+                    body: { entity_id: switchKey.get('blackLight_begin') + entityId + switchKey.get('blackLight_end') },
+                })
+                newScenario.push({
+                    url: `/api/services/lock/${!childLock ? 'lock' : 'unlock'}`,
+                    body: { entity_id: switchKey.get('childLock_begin') + entityId + switchKey.get('childLock_end') },
+                })
+                newScenario.push({
+                    url: `/api/services/number/set_value`,
+                    body: { entity_id: switchKey.get('brightness_begin') + entityId + switchKey.get('brightness_end'), value: brightness },
+                })
+                newScenario.push({
+                    url: `/api/services/select/select_option`,
+                    body: { entity_id: switchKey.get('onColor_begin') + entityId + switchKey.get('onColor_end'), option: onColor },
+                })
+                newScenario.push({
+                    url: `/api/services/select/select_option`,
+                    body: { entity_id: switchKey.get('offColor_begin') + entityId + switchKey.get('offColor_end'), option: offColor },
+                })
+                newScenario.push({
+                    url: `/api/services/switch/turn_${switchStatus1 ? 'on': 'off'}`,
+                    body: { entity_id: switchKey.get('state1_begin') + entityId + switchKey.get('state1_end') },
+                })
+                newScenario.push({
+                    url: `/api/services/switch/turn_${switchStatus2 ? 'on': 'off'}`,
+                    body: { entity_id: switchKey.get('state2_begin') + entityId + switchKey.get('state2_end') },
+                })
+                newScenario.push({
+                    url: `/api/services/select/select_option`,
+                    body: { entity_id: switchKey.get('powerOnBehavior1_begin') + entityId + switchKey.get('powerOnBehavior1_end'), option: powerOnBehavior1 },
+                })
+                newScenario.push({
+                    url: `/api/services/select/select_option`,
+                    body: { entity_id: switchKey.get('powerOnBehavior2_begin') + entityId + switchKey.get('powerOnBehavior2_end'), option: powerOnBehavior2 },
+                })
+                try {
+                    let postNewScenario = {
+                        userId: currentUser.customUserDetails.id + '',
+                        name: scenarioName,
+                        entityId: entityId
+                    };
+                    const res1 = await postDataBackend('/api/scenarios/create', postNewScenario, currentUser.tokenBackend);
+                    console.log(postNewScenario);
+                    if (res1) {
+                        newScenario.forEach(async (element) => {
+                            let newAction = {
+                                entityId: entityId,
+                                scenarioId: res1.id,
+                                payload: JSON.stringify(element)
+                            }
+                            const res2 = await postDataBackend('/api/actions', newAction, currentUser.tokenBackend);
+                            console.log(newAction);
+                        });
+                    }
+                    alert('Lưu kịch bản thành công');
+                    setToggleSmartPage();
+                    goBack();
+                } catch (error) {
+                    alert('Lỗi khi lưu kịch bản');
+                    console.log(error);
+                }
+            }
         }
         // Chạy kịch bản
         else {
@@ -831,138 +917,17 @@ export default function Scenario() {
                     </TouchableOpacity>
                     <View style={scenarioCss.separator} />
 
-                    <View style={scenarioCss.switchRow}>
-                        <Text style={scenarioCss.label}>Contdown L1 (s)</Text>
-                        {scenarioId != null ?
-                            <Text style={scenarioCss.label}>{countdown1}</Text>
-                            :
+                    {scenarioId == null &&
+                        <View style={scenarioCss.switchCol}>
+                            <Text style={scenarioCss.label}>Tên kịch bản</Text>
+
                             <TextInput
-                                value={countdown1}
-                                onSubmitEditing={handleCountdown1}
-                                onChange={handleChangeCountdown1}
-                                style={{ borderColor: 'gray', borderWidth: 1, paddingHorizontal: 5 }}
-                                keyboardType="numeric"
-                                inputMode="numeric"
+                                value={scenarioName}
+                                onChangeText={handleScenarioName}
+                                style={{ borderColor: 'gray', borderWidth: 1, width: '90%', height: 40, marginBottom: -10, marginTop: 8 }}
                             />
-                        }
-                    </View>
-                    <View style={scenarioCss.separator} />
-
-                    <View style={scenarioCss.switchRow}>
-                        <Text style={scenarioCss.label}>Contdown L2 (s)</Text>
-                        {scenarioId != null ?
-                            <Text style={scenarioCss.label}>{countdown2}</Text>
-                            :
-                            <TextInput
-                                value={countdown2}
-                                onSubmitEditing={handleCountdown2}
-                                onChange={handleChangeCountdown2}
-                                style={{ borderColor: 'gray', borderWidth: 1, paddingHorizontal: 5 }}
-                                keyboardType="numeric"
-                                inputMode="numeric"
-                            />
-                        }
-                    </View>
-                    <View style={scenarioCss.separator} />
-
-                    <TouchableOpacity style={scenarioCss.switchRow} onPress={showDatePicker1}>
-                        <Text style={scenarioCss.label}>Schedule L1</Text>
-                        <View style={{ flexDirection: 'row' }}>
-                            <Text style={[scenarioCss.label, { marginRight: 5 }]}>{scheduleSwitchStatus1 === 'On' ? 'Bật lúc' : (scheduleSwitchStatus1 === 'Off' ? 'Tắt lúc' : 'No')}</Text>
-                            <Text style={scenarioCss.label}>{scheduleSwitchStatus1 === 'On' || scheduleSwitchStatus1 === 'Off' ? date1.toLocaleString() : ''}</Text>
                         </View>
-                        {(showDate1 && (
-                            <DateTimePicker
-                                value={date1}
-                                mode="date"
-                                display="default"
-                                onChange={handleDateSelected1}
-                                maximumDate={new Date(2300, 10, 20)}
-                                minimumDate={new Date(1950, 0, 1)}
-                            />
-                        ))
-                            ||
-                            (showTime1 && (
-                                <DateTimePicker
-                                    value={date1}
-                                    mode="time"
-                                    display="default"
-                                    onChange={handleTimeSelected1}
-                                />
-                            ))
-                        }
-                        <Modal
-                            // animationType="slide"
-                            transparent={true}
-                            visible={showModalScheduleSwitchStatus1}
-                            onRequestClose={() => setShowModalScheduleSwitchStatus1(false)}
-                        >
-                            <View style={scenarioCss.modalContainer}>
-                                <View style={scenarioCss.modalView}>
-                                    <Text style={scenarioCss.modalText}>Select Power-on behavior</Text>
-                                    <ScrollView contentContainerStyle={{ alignItems: 'center', width: device.width * 0.8 }}>
-                                        <TouchableOpacity style={scenarioCss.button} onPress={() => toggleSwitchStatus1('On')}>
-                                            <Text style={scenarioCss.buttonText}>On</Text>
-                                        </TouchableOpacity>
-                                        <TouchableOpacity style={scenarioCss.button} onPress={() => toggleSwitchStatus1('Off')}>
-                                            <Text style={scenarioCss.buttonText}>Off</Text>
-                                        </TouchableOpacity>
-                                    </ScrollView>
-                                </View>
-                            </View>
-                        </Modal>
-
-                    </TouchableOpacity>
-                    <View style={scenarioCss.separator} />
-
-                    <TouchableOpacity style={scenarioCss.switchRow} onPress={showDatePicker2}>
-                        <Text style={scenarioCss.label}>Schedule L2</Text>
-                        <View style={{ flexDirection: 'row' }}>
-                            <Text style={[scenarioCss.label, { marginRight: 5 }]}>{scheduleSwitchStatus2 === 'On' ? 'Bật lúc' : (scheduleSwitchStatus2 === 'Off' ? 'Tắt lúc' : 'No')}</Text>
-                            <Text style={scenarioCss.label}>{scheduleSwitchStatus2 === 'On' || scheduleSwitchStatus2 === 'Off' ? date2.toLocaleString() : ''}</Text>
-                        </View>
-                        {(showDate2 && (
-                            <DateTimePicker
-                                value={date2}
-                                mode="date"
-                                display="default"
-                                onChange={handleDateSelected2}
-                                maximumDate={new Date(2300, 10, 20)}
-                                minimumDate={new Date(1950, 0, 1)}
-                            />
-                        ))
-                            ||
-                            (showTime2 && (
-                                <DateTimePicker
-                                    value={date2}
-                                    mode="time"
-                                    display="default"
-                                    onChange={handleTimeSelected2}
-                                />
-                            ))}
-                    </TouchableOpacity>
-                    <Modal
-                        // animationType="slide"
-                        transparent={true}
-                        visible={showModalScheduleSwitchStatus2}
-                        onRequestClose={() => setShowModalScheduleSwitchStatus2(false)}
-                    >
-                        <View style={scenarioCss.modalContainer}>
-                            <View style={scenarioCss.modalView}>
-                                <Text style={scenarioCss.modalText}>Select Power-on behavior</Text>
-                                <ScrollView contentContainerStyle={{ alignItems: 'center', width: device.width * 0.8 }}>
-                                    <TouchableOpacity style={scenarioCss.button} onPress={() => toggleSwitchStatus2('On')}>
-                                        <Text style={scenarioCss.buttonText}>On</Text>
-                                    </TouchableOpacity>
-                                    <TouchableOpacity style={scenarioCss.button} onPress={() => toggleSwitchStatus2('Off')}>
-                                        <Text style={scenarioCss.buttonText}>Off</Text>
-                                    </TouchableOpacity>
-                                </ScrollView>
-                            </View>
-                        </View>
-                    </Modal>
-                    <View style={scenarioCss.separator} />
-
+                    }
                     <View style={scenarioCss.switchRow}>
                         <TouchableOpacity
                             style={scenarioCss.buttonScenario}
@@ -972,6 +937,11 @@ export default function Scenario() {
                         </TouchableOpacity>
                     </View>
                     <View style={scenarioCss.separator} />
+
+
+                    {scenarios.map((e, index) => {
+                        return <Text key={index}>{e.url}</Text>
+                    })}
 
                     {/* <View style={scenarioCss.switchRow}>
                         <TouchableOpacity
@@ -991,16 +961,6 @@ export default function Scenario() {
                     </View>
                     <View style={scenarioCss.separator} /> */}
                 </View>
-
-
-
-
-
-
-
-
-
-
             </ScrollView>
         </SafeAreaView>
     );
@@ -1028,6 +988,12 @@ const scenarioCss = StyleSheet.create({
     },
     switchRow: {
         flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingVertical: 16,
+    },
+    switchCol: {
+        flexDirection: 'column',
         justifyContent: 'space-between',
         alignItems: 'center',
         paddingVertical: 16,
