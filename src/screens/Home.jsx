@@ -27,7 +27,7 @@ export default function Home() {
      * check authen
      */
     const { currentUser, setCurrentUser, removeCurrentUser, entityId, setEntityId } = useStore();
-    const [isLoading, setIsLoading] = React.useState(true);
+    const [isLoading, setIsLoading] = useState(true);
     const [devices, setDevices] = useState([]);
     useEffect(() => {
         const checkCurrentUser = async () => {
@@ -40,38 +40,28 @@ export default function Home() {
                     var existingName = []
                     var filteredData = []
                     allDevices.forEach(item => {
-                        if (item.attributes.friendly_name.slice(0, 2) == '0x') {
-                            const name = item.attributes.friendly_name.slice(0, 18);
-                            if (existingName.length === 0) {
-                                console.log("====" + name);
-                                existingName.push(name)
-                                filteredData.push(item);
-                            } else {
-                                let existingGroup = existingName.find(groupName => groupName === name);
-                                if (existingGroup) {
-                                    console.log("====" + name);
-                                    // existingGroup.devices.push(item);
-                                } else {
+                        if (item.entity_id) {
+                            // console.log("item.entity_id = ", item.entity_id);
+                            if (item.entity_id.split('.')[1].slice(0, 2) == '0x') {
+                                const name = item.attributes.friendly_name.split('-')[0];
+                                if (existingName.length === 0) {
                                     console.log("====" + name);
                                     existingName.push(name)
                                     filteredData.push(item);
+                                } else {
+                                    let existingGroup = existingName.find(groupName => groupName === name);
+                                    if (existingGroup) {
+                                        console.log("====" + name);
+                                        // existingGroup.devices.push(item);
+                                    } else {
+                                        console.log("====" + name);
+                                        existingName.push(name)
+                                        filteredData.push(item);
+                                    }
                                 }
                             }
                         }
                     });
-                    // const filteredData = allDevices.reduce((acc, item) => {
-                    //     if (item && item.attributes && item.attributes.friendly_name) {
-                    //         const name = item?.attributes?.friendly_name?.split(' ')[0];
-                    //         const existingGroup = acc.find(group => group[0].attributes.friendly_name === name);
-                    //         if (existingGroup) {
-                    //             existingGroup.push(item);
-                    //         } else {
-                    //             acc.push([item]);
-                    //         }
-                    //         return acc;
-                    //     }
-                    // }, []);
-                    // console.log(filteredData);
                     setDevices(filteredData);
                 } else {
                     replace('Login');
@@ -91,7 +81,16 @@ export default function Home() {
     const handleDetail = (entityId) => {
         console.log(entityId);
         setEntityId(entityId);
-        navigate('DeviceDetail');
+        if (entityId.split('_')[1] == '2gang') {
+            console.log('2gang nha');
+            // TODO: sửa lại chỗ này
+            navigate('DeviceDetail3');
+        } else if (entityId.split('_')[1] == '3gang') {
+            console.log('3gang nha');
+            navigate('DeviceDetail3');
+        } else {
+            alert("Thiết bị không hợp lệ!");
+        }
     }
     return (
         <SafeAreaView style={[styles.customSafeArea]}>
@@ -100,8 +99,8 @@ export default function Home() {
                 <View style={homeCss.container}>
                     {devices.map((item, index) => {
                         return (
-                            <TouchableOpacity style={homeCss.item} key={index} onPress={() => handleDetail(item.attributes.friendly_name.slice(0, 18))}>
-                                <Text style={homeCss.itemTitle}>{item.attributes.friendly_name.slice(0, 18)}</Text>
+                            <TouchableOpacity style={homeCss.item} key={index} onPress={() => handleDetail(item.entity_id.split('.')[1].split('_')[0] + '_' + item.entity_id.split('.')[1].split('_')[1])}>
+                                <Text style={homeCss.itemTitle}>{item.attributes.friendly_name.split('-')[0]}</Text>
                                 <View style={homeCss.itemIcon}>
                                 </View>
                             </TouchableOpacity>

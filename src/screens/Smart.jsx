@@ -46,7 +46,7 @@ export default function Smart() {
             for (let value of newScenarios) {
                 if (value.body.entity_id.includes('switch')) {
                     const result = await postData(value.url, value.body, currentUser.token);
-                    await delay(500); // Dừng lại 1 giây
+                    // await delay(500); // Dừng lại 1 giây
                 }
             }
             alert('Chạy kịch bản thành công!')
@@ -94,8 +94,8 @@ export default function Smart() {
                         var existingName = []
                         var filteredData = []
                         allDevices.forEach(item => {
-                            if (item.attributes.friendly_name.slice(0, 2) == '0x') {
-                                const name = item.attributes.friendly_name.slice(0, 18);
+                            if (item.entity_id.split('.')[1].slice(0, 2) == '0x') {
+                                const name = item.attributes.friendly_name.split('-')[0];
                                 if (existingName.length === 0) {
                                     console.log("====" + name);
                                     existingName.push(name)
@@ -134,12 +134,12 @@ export default function Smart() {
                                                 key={index}
                                                 onPress={() => {
                                                     setScenarioId(null);
-                                                    setEntityId(item.attributes.friendly_name.slice(0, 18))
+                                                    setEntityId(item.entity_id.split('.')[1].split('_')[0] + '_' + item.entity_id.split('.')[1].split('_')[1])
                                                     setShowModal(false)
                                                     navigate('Scenario')
                                                 }}
                                             >
-                                                <Text style={smartCss.modalButtonText}>{item.attributes.friendly_name.slice(0, 18)}</Text>
+                                                <Text style={smartCss.modalButtonText}>{item.attributes.friendly_name.split('-')[0]}</Text>
                                             </TouchableOpacity>
                                         )
                                     })}

@@ -15,7 +15,7 @@ export async function getData(url, accessToken) {
         const data = await response.json();
         return data;
     } catch (error) {
-        console.error('Lỗi khi gọi API:', error);
+        console.error('Lỗi khi gọi API:' + error + 'url: ' + url);
         return null;
     }
 }
@@ -37,7 +37,8 @@ export async function postData(url, body, accessToken) {
         const data = await response.json();
         return data;
     } catch (error) {
-        console.error('Lỗi khi gọi API:', error);
+        console.error('Lỗi khi gọi API:' + error + 'url: ' + url);
+        // console.error('Lỗi khi gọi API:', error);
         console.log(url);
         return null;
     }
@@ -60,7 +61,7 @@ export async function putData(url, body, accessToken) {
         const data = await response.json();
         return data;
     } catch (error) {
-        console.error('Lỗi khi gọi API:', error);
+        console.error('Lỗi khi gọi API:' + error + 'url: ' + url);
         return null;
     }
 }
