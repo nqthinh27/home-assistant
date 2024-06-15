@@ -97,16 +97,16 @@ export default function Smart() {
                             if (item.entity_id.split('.')[1].slice(0, 2) == '0x') {
                                 const name = item.attributes.friendly_name.split('-')[0];
                                 if (existingName.length === 0) {
-                                    console.log("====" + name);
+                                    // console.log("====" + name);
                                     existingName.push(name)
                                     filteredData.push(item);
                                 } else {
                                     let existingGroup = existingName.find(groupName => groupName === name);
                                     if (existingGroup) {
-                                        console.log("====" + name);
+                                        // console.log("====" + name);
                                         // existingGroup.devices.push(item);
                                     } else {
-                                        console.log("====" + name);
+                                        // console.log("====" + name);
                                         existingName.push(name)
                                         filteredData.push(item);
                                     }
@@ -134,9 +134,21 @@ export default function Smart() {
                                                 key={index}
                                                 onPress={() => {
                                                     setScenarioId(null);
-                                                    setEntityId(item.entity_id.split('.')[1].split('_')[0] + '_' + item.entity_id.split('.')[1].split('_')[1])
+                                                    let entityId = item.entity_id.split('.')[1].split('_')[0] + '_' + item.entity_id.split('.')[1].split('_')[1];
+                                                    setEntityId(entityId)
                                                     setShowModal(false)
                                                     navigate('Scenario')
+                                                    setEntityId(entityId);
+                                                    if (entityId.split('_')[1] == '2gang') {
+                                                        console.log('2 công tắc');
+                                                        // TODO: sửa lại chỗ này
+                                                        navigate('Scenario3');
+                                                    } else if (entityId.split('_')[1] == '3gang') {
+                                                        console.log('3 công tắc');
+                                                        navigate('Scenario');
+                                                    } else {
+                                                        alert("Thiết bị không hợp lệ!");
+                                                    }
                                                 }}
                                             >
                                                 <Text style={smartCss.modalButtonText}>{item.attributes.friendly_name.split('-')[0]}</Text>
