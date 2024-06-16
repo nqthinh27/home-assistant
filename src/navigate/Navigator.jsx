@@ -14,6 +14,9 @@ const Stack = createNativeStackNavigator();
 export default function Navigator() {
     // const isDarkTheme = useSelector((state) => state.theme.isDarkTheme);
     return (
+        /**
+         * STEP 1: Khai báo thêm các màn mới
+         */
         <NavigationContainer>
             <Stack.Navigator initialRouteName="UIScreen" screenOptions={{ headerShown: false }} >
                 <Stack.Screen name={"Home"} component={Home} />

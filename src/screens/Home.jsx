@@ -75,16 +75,14 @@ export default function Home() {
         checkCurrentUser();
     }, []);
     /**
-     * handle pick 1 device
-     * @param {*} id 
+     * STEP 2: check điều kiện của id để chuyển màn hình
      */
     const handleDetail = (entityId) => {
         console.log(entityId);
         setEntityId(entityId);
         if (entityId.split('_')[1] == '2gang') {
             console.log('2 công tắc');
-            // TODO: sửa lại chỗ này
-            navigate('DeviceDetail3');
+            navigate('DeviceDetail');
         } else if (entityId.split('_')[1] == '3gang') {
             console.log('3 công tắc');
             navigate('DeviceDetail3');
